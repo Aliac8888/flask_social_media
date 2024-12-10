@@ -1,2 +1,3 @@
 /.venv
+/.vscode
 /frontend/preact-app/node_modules
