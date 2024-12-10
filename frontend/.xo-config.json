@@ -1,0 +1,11 @@
+{
+	"prettier": true,
+	"overrides": [
+		{
+			"files": "src/**/*.tsx",
+			"rules": {
+				"unicorn/filename-case": "off"
+			}
+		}
+	]
+}
