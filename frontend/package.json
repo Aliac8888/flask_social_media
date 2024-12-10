@@ -11,6 +11,9 @@
 	},
 	"devDependencies": {
 		"@preact/preset-vite": "^2.9.0",
-		"vite": "^5.3.3"
+		"typescript": "^5.5.4",
+		"vite": "^5.3.3",
+		"webpack": "npm:ignoredep@^200.9999.0",
+		"xo": "^0.59.3"
 	}
 }
