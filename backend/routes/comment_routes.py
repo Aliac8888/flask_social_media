@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from db import db
 from bson import ObjectId
-import datetime
 
 bp = Blueprint("comment", __name__, url_prefix="/comments")
 
