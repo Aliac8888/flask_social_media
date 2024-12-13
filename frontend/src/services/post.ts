@@ -1,5 +1,4 @@
-// TODO: Use environment variables instead.
-const apiUrl = new URL('http://localhost:5000');
+import {apiUrl} from './backend.js';
 
 export type Post = {
 	body: string;
@@ -9,7 +8,7 @@ export type Post = {
 };
 
 export async function createPost(postData: Post) {
-	const response = await fetch(new URL(`/posts/`, apiUrl), {
+	const response = await fetch(new URL('posts/', apiUrl), {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
 		body: JSON.stringify(postData),

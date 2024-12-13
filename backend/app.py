@@ -1,6 +1,6 @@
 from flask import Flask
 from routes import user_routes, post_routes, comment_routes
-from db import client
+from config import be_host, be_port
 
 app = Flask(__name__)
 
@@ -10,4 +10,4 @@ app.register_blueprint(post_routes.bp)
 app.register_blueprint(comment_routes.bp)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(be_host, be_port, debug=True)
