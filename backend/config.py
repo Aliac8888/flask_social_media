@@ -9,8 +9,17 @@ def non_falsy[T](value: T | None) -> T:
 
 load_dotenv()
 
-db_user = non_falsy(getenv("SOCIAL_BE_DB_USER"))
-db_pass = non_falsy(getenv("SOCIAL_BE_DB_PASS"))
+maintenance = getenv("SOCIAL_BE_MAINTENANCE") == "1"
+
+db_root_user = getenv("SOCIAL_DB_ROOT_USER", "")
+db_root_pass = getenv("SOCIAL_DB_ROOT_PASS", "")
+
+db_backend_user = non_falsy(getenv("SOCIAL_BE_DB_USER"))
+db_backend_pass = non_falsy(getenv("SOCIAL_BE_DB_PASS"))
+
+db_user = db_root_user if maintenance else db_backend_user
+db_pass = db_root_pass if maintenance else db_backend_pass
+
 db_host = non_falsy(getenv("SOCIAL_BE_DB_HOST"))
 db_port = int(non_falsy(getenv("SOCIAL_BE_DB_PORT")))
 
