@@ -12,9 +12,8 @@ bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 @bp.get("/", tags=[users_tag], responses={200: UsersList})
 def list_users():
-    users = db.users.find({})
-
-    return UsersList(users=[UserWithId(**i, id=i["_id"]) for i in users]).model_dump()
+    users = db.users.find({}).to_list()
+    return UsersList(users=users).model_dump()
 
 
 @bp.post(
@@ -53,19 +52,7 @@ def get_user(path: UserId):
     if i is None:
         return UserNotFound().model_dump(), 404
 
-    return UserWithFriends(
-        id=i["_id"],
-        name=i["name"],
-        email=i["email"],
-        friends=[
-            UserWithId(
-                id=j["_id"],
-                name=j["name"],
-                email=j["email"],
-            )
-            for j in i["friends"]
-        ],
-    ).model_dump()
+    return UserWithFriends(**i).model_dump()
 
 
 @bp.patch(

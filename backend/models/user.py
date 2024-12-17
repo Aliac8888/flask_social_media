@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, model_validator
+from typing import Annotated
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from models.mongo import ObjectIdStr
 
 
@@ -29,7 +30,7 @@ class UserId(BaseModel):
 
 
 class UserWithId(User):
-    id: ObjectIdStr
+    id: Annotated[ObjectIdStr, Field(validation_alias='_id')]
 
 
 class UserWithFriends(UserWithId):

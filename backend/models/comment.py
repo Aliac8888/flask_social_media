@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from typing import Annotated
+from pydantic import BaseModel, Field
 from models.mongo import ObjectIdStr
 
 
@@ -23,7 +24,7 @@ class CommentId(BaseModel):
 
 
 class CommentWithId(Comment):
-    id: ObjectIdStr
+    id: Annotated[ObjectIdStr, Field(validation_alias='_id')]
 
 
 class CommentNotFound(BaseModel):

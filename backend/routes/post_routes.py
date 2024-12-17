@@ -11,9 +11,8 @@ bp = APIBlueprint("post", __name__, url_prefix="/posts")
 
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
 def list_posts():
-    posts = db.posts.find({})
-
-    return PostsList(posts=[PostWithId(**i, id=i["_id"]) for i in posts]).model_dump()
+    posts = db.posts.find({}).to_list()
+    return PostsList(posts=posts).model_dump()
 
 
 @bp.post("/", tags=[posts_tag], responses={201: PostId})

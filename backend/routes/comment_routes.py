@@ -11,11 +11,8 @@ bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 
 @bp.get("/", tags=[comments_tag], responses={200: CommentsList})
 def get_comments(query: PostId):
-    comments = db.comments.find({"post": ObjectId(query.post_id)})
-
-    return CommentsList(
-        comments=[CommentWithId(**i, id=i["_id"]) for i in comments]
-    ).model_dump()
+    comments = db.comments.find({"post": ObjectId(query.post_id)}).to_list()
+    return CommentsList(comments=comments).model_dump()
 
 
 @bp.post("/", tags=[comments_tag], responses={201: CommentId})
