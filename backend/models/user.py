@@ -29,12 +29,17 @@ class UserId(BaseModel):
     user_id: ObjectIdStr
 
 
+class Friend(UserId):
+    friend_id: ObjectIdStr
+
+
 class UserWithId(User):
-    id: Annotated[ObjectIdStr, Field(validation_alias='_id')]
+    id: Annotated[ObjectIdStr, Field(validation_alias="_id")]
 
 
 class UserWithFriends(UserWithId):
     friends: list[UserWithId]
+    friended_by: list[UserWithId]
 
 
 class UserNotFound(BaseModel):

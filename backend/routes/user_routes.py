@@ -58,7 +58,15 @@ def get_user(path: UserId):
                     "as": "friends",
                 }
             },
-            {"$project": {"friends.friends": 0}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "_id",
+                    "foreignField": "friends",
+                    "as": "friended_by",
+                }
+            },
+            {"$project": {"friends.friends": 0, "friended_by.friends": 0}},
         ],
     )
 
@@ -93,11 +101,58 @@ def update_user(path: UserId, body: UserPatch):
     return "", 204
 
 
-@bp.delete("/<user_id>", tags=[users_tag], responses={204: None})
+@bp.delete("/<user_id>", tags=[users_tag], responses={204: None, 404: UserNotFound})
 def delete_user(path: UserId):
     result = db.users.delete_one({"_id": ObjectId(path.user_id)})
 
     if result.deleted_count < 1:
+        return UserNotFound().model_dump(), 404
+
+    db.posts.delete_many({"author": ObjectId(path.user_id)})
+    db.comments.delete_many({"author": ObjectId(path.user_id)})
+
+    return "", 204
+
+
+@bp.put(
+    "/<user_id>/following/<friend_id>",
+    tags=[users_tag],
+    responses={204: None, 404: UserNotFound},
+)
+def follow_user(path: Friend):
+    friend = db.users.find_one({"_id": ObjectId(path.friend_id)})
+
+    if friend is None:
+        return UserNotFound().model_dump(), 404
+
+    result = db.users.update_one(
+        {"_id": ObjectId(path.user_id)},
+        {"$addToSet": {"friends": ObjectId(path.friend_id)}},
+    )
+
+    if result.matched_count < 1:
+        return UserNotFound().model_dump(), 404
+
+    return "", 204
+
+
+@bp.delete(
+    "/<user_id>/following/<friend_id>",
+    tags=[users_tag],
+    responses={204: None, 404: UserNotFound},
+)
+def unfollow_user(path: Friend):
+    friend = db.users.find_one({"_id": ObjectId(path.friend_id)})
+
+    if friend is None:
+        return UserNotFound().model_dump(), 404
+
+    result = db.users.update_one(
+        {"_id": ObjectId(path.user_id)},
+        {"$pull": {"friends": ObjectId(path.friend_id)}},
+    )
+
+    if result.matched_count < 1:
         return UserNotFound().model_dump(), 404
 
     return "", 204
