@@ -1,5 +1,4 @@
 import type {Post} from '../services/post.js';
-import './PostView.css';
 
 export function PostView({post}: {post: Post}) {
 	return (

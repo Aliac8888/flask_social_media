@@ -1,5 +1,4 @@
 import type {User} from '../services/user.js';
-import './UserProfile.css';
 
 export function UserProfile({user}: {user: User}) {
 	return (

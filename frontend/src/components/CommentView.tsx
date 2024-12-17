@@ -1,5 +1,4 @@
 import type {Comment} from '../services/comment.js';
-import './CommentView.css';
 
 export function CommentView({comment}: {comment: Comment}) {
 	return (

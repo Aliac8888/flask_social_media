@@ -7,11 +7,13 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"openapi-fetch": "^0.13.3",
 		"preact": "^10.22.1"
 	},
 	"devDependencies": {
 		"@preact/preset-vite": "^2.9.0",
 		"@types/node": "20",
+		"openapi-typescript": "^7.4.4",
 		"typescript": "^5.5.4",
 		"vite": "^5.3.3",
 		"webpack": "npm:ignoredep@^200.9999.0",

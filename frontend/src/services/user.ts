@@ -1,17 +1,14 @@
-import {apiUrl} from './backend.js';
+import type {components} from './api.js';
+import {client} from './backend.js';
 
-export type User = {
-	name: string;
-	email: string;
-	// TODO: Add friends property.
-};
-
-export async function createUser(userData: User) {
-	const response = await fetch(new URL('users/', apiUrl), {
-		method: 'POST',
-		headers: {'Content-Type': 'application/json'},
-		body: JSON.stringify(userData),
+export async function createUser(userData: components['schemas']['UserInit']) {
+	const {data, response} = await client.POST('/users/', {
+		body: userData,
 	});
 
-	return response.json();
+	if (!data) {
+		throw new Error('Failed to create a new user', {cause: response});
+	}
+
+	return data;
 }

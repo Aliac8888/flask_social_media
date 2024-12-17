@@ -6,6 +6,12 @@
 			"rules": {
 				"unicorn/filename-case": "off"
 			}
+		},
+		{
+			"files": "src/services/**.ts",
+			"rules": {
+				"new-cap": "off"
+			}
 		}
 	]
 }

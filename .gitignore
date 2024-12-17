@@ -1,5 +1,6 @@
 /.venv
 /.vscode
-/frontend/preact-app/node_modules
+node_modules
+api.d.ts
 **/__pycache__/
 .env
