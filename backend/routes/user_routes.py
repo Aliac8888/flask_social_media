@@ -1,35 +1,101 @@
-from flask import Blueprint, request, jsonify
-from db import db
+from flask_openapi3.models.tag import Tag
+from flask_openapi3.blueprint import APIBlueprint
+from pydantic import BaseModel
+from models.user import *
+from models.mongo import ObjectIdStr
+from db import DUPLICATE_KEY, db
+from pymongo.errors import OperationFailure
 from bson import ObjectId
 
-bp = Blueprint("user", __name__, url_prefix="/users")
 
-@bp.route("/", methods=["GET"])
-def get_users():
-    users = list(db.users.find({}, {"_id": 0}))
-    return jsonify(users), 200
+users_tag = Tag(name="users")
+bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 
-@bp.route("/", methods=["POST"])
-def create_user():
-    data = request.json
-    user = {
-        "name": data["name"],
-        "email": data["email"],
-        "friends": []
-    }
-    db.users.insert_one(user)
-    return jsonify({"message": "User created"}), 201
+@bp.get("/", tags=[users_tag], responses={200: UsersList})
+def list_users():
+    users = db.users.find({})
+
+    return UsersList(users=[UserWithId(**i, id=i["_id"]) for i in users]).model_dump()
 
 
-@bp.route("/<user_id>", methods=["PUT"])
-def update_user(user_id):
-    data = request.json
-    db.users.update_one({"_id": ObjectId(user_id)}, {"$set": data})
-    return jsonify({"message": "User updated"}), 200
+@bp.post(
+    "/",
+    tags=[users_tag],
+    responses={
+        201: UserId,
+        409: UserExists,
+    },
+)
+def create_user(body: UserInit):
+    try:
+        result = db.users.insert_one(
+            {"name": body.name, "email": body.email, "friends": []}
+        )
+    except OperationFailure as e:
+        if e.code == DUPLICATE_KEY:
+            return UserExists().model_dump(), 409
+
+        raise
+
+    return UserId(user_id=result.inserted_id).model_dump(), 201
 
 
-@bp.route("/<user_id>", methods=["DELETE"])
-def delete_user(user_id):
-    db.users.delete_one({"_id": ObjectId(user_id)})
-    return jsonify({"message": "User deleted"}), 200
+@bp.get(
+    "/<user_id>",
+    tags=[users_tag],
+    responses={
+        200: UserWithFriends,
+        404: UserNotFound,
+    },
+)
+def get_user(path: UserId):
+    i = db.users.find_one({"_id": ObjectId(path.id)})
+
+    if i is None:
+        return UserNotFound().model_dump(), 404
+
+    return UserWithFriends(
+        id=i["_id"],
+        name=i["name"],
+        email=i["email"],
+        friends=[
+            UserWithId(
+                id=j["_id"],
+                name=j["name"],
+                email=j["email"],
+            )
+            for j in i["friends"]
+        ],
+    ).model_dump()
+
+
+@bp.patch(
+    "/<user_id>", tags=[users_tag], responses={204: None, 404: UserNotFound, 409: UserExists}
+)
+def update_user(path: UserId, body: UserPatch):
+    try:
+        result = db.users.update_one(
+            {"_id": ObjectId(path.id)},
+            {"$set": body.model_dump(exclude_none=True)},
+        )
+    except OperationFailure as e:
+        if e.code == DUPLICATE_KEY:
+            return UserExists().model_dump(), 409
+
+        raise
+
+    if result.matched_count < 1:
+        return UserNotFound().model_dump(), 404
+
+    return "", 204
+
+
+@bp.delete("/<user_id>", tags=[users_tag], responses={204: None})
+def delete_user(path: UserId):
+    result = db.users.delete_one({"_id": ObjectId(path.id)})
+
+    if result.deleted_count < 1:
+        return UserNotFound().model_dump(), 404
+
+    return "", 204

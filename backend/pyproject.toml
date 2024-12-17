@@ -6,7 +6,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "bson>=0.5.10",
+    "flask-openapi3[rapidoc]>=4.0.3",
     "flask>=3.1.0",
     "pymongo>=4.10.1",
     "python-dotenv>=1.0.1",
+    "email-validator>=2.2.0",
 ]
+
+[tool.mypy]
+plugins = ['pydantic.mypy']

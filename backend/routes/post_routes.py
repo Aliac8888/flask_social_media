@@ -1,30 +1,45 @@
-from flask import Blueprint, request, jsonify
+from flask_openapi3.models.tag import Tag
+from flask_openapi3.blueprint import APIBlueprint
+from models.post import *
 from db import db
 from bson import ObjectId
 import datetime
 
-bp = Blueprint("post", __name__, url_prefix="/posts")
-
-@bp.route("/", methods=["GET"])
-def get_posts():
-    posts = list(db.posts.find({}, {"_id": 0}))
-    return jsonify(posts), 200
+posts_tag = Tag(name="posts")
+bp = APIBlueprint("post", __name__, url_prefix="/posts")
 
 
-@bp.route("/", methods=["POST"])
-def create_post():
-    data = request.json
-    post = {
-        "content": data["content"],
-        "date": datetime.UTC,
-        "author": ObjectId(data["author"])
-    }
-    db.posts.insert_one(post)
-    return jsonify({"message": "Post created"}), 201
+@bp.get("/", tags=[posts_tag], responses={200: PostsList})
+def list_posts():
+    posts = db.posts.find({})
+
+    return PostsList(posts=[PostWithId(**i, id=i["_id"]) for i in posts]).model_dump()
 
 
-@bp.route("/<post_id>", methods=["PUT"])
-def update_post(post_id):
-    data = request.json
-    db.posts.update_one({"_id": ObjectId(post_id)}, {"$set": data})
-    return jsonify({"message": "Post updated"}), 200
+@bp.post("/", tags=[posts_tag], responses={201: PostId})
+def create_post(body: PostInit):
+    now = datetime.datetime.now(datetime.UTC)
+
+    result = db.posts.insert_one(
+        {
+            "content": body.content,
+            "creation_time": now,
+            "modification_time": now,
+            "author": ObjectId(body.author),
+        }
+    )
+
+    return PostId(post_id=result.inserted_id).model_dump(), 201
+
+
+@bp.patch("/<post_id>", tags=[posts_tag], responses={204: None, 404: PostNotFound})
+def update_post(path: PostId, body: PostPatch):
+    result = db.posts.update_one(
+        {"_id": ObjectId(path.post_id)},
+        {"$set": body.model_dump(exclude_none=True)},
+    )
+
+    if result.matched_count < 1:
+        return PostNotFound().model_dump(), 404
+
+    return "", 204

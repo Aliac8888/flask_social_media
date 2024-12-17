@@ -1,8 +1,7 @@
-from db import client, db
+from db import USER_NOT_FOUND, client, db
 from config import maintenance, db_root_user, db_backend_user, db_backend_pass
 from pymongo.errors import OperationFailure
 
-USER_NOT_FOUND = 11
 
 if not maintenance:
     print(
@@ -42,3 +41,5 @@ client.admin.command(
     ],
     comment="Setup",
 )
+
+db.users.create_index("email", unique=True)
