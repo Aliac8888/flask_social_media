@@ -1,7 +1,7 @@
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
 from models.user import *
-from db import DUPLICATE_KEY, db
+from db import DUPLICATE_KEY, get_one, db
 from pymongo.errors import OperationFailure
 from bson import ObjectId
 
@@ -47,7 +47,22 @@ def create_user(body: UserInit):
     },
 )
 def get_user(path: UserId):
-    i = db.users.find_one({"_id": ObjectId(path.user_id)})
+    cur = db.users.aggregate(
+        [
+            {"$match": {"_id": ObjectId(path.user_id)}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "friends",
+                    "foreignField": "_id",
+                    "as": "friends",
+                }
+            },
+            {"$project": {"friends.friends": 0}},
+        ],
+    )
+
+    i = get_one(cur)
 
     if i is None:
         return UserNotFound().model_dump(), 404
