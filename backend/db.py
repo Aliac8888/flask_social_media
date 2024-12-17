@@ -8,7 +8,8 @@ USER_NOT_FOUND = 11
 DUPLICATE_KEY = 11000
 
 client = MongoClient(
-    f"mongodb://{quote_plus(db_user)}:{quote_plus(db_pass)}@{db_host}:{db_port}/"
+    #f"mongodb://{quote_plus(db_user)}:{quote_plus(db_pass)}@{db_host}:{db_port}/"
+    "mongodb://localhost:27017/"
 )
 
 db = client["social_media"]

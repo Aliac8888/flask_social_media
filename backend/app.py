@@ -1,10 +1,11 @@
 from flask import redirect
+from flask_cors import CORS  # Import Flask-CORS
 from flask_openapi3.openapi import OpenAPI
 from routes import user_routes, post_routes, comment_routes
 from config import be_host, be_port
 
 app = OpenAPI(__name__)
-
+CORS(app, origins=["http://localhost:5173"])
 
 @app.get("/", responses={302: None}, doc_ui=False)
 def redirect_to_openapi():
