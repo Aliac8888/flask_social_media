@@ -48,7 +48,7 @@ def create_user(body: UserInit):
     },
 )
 def get_user(path: UserId):
-    i = db.users.find_one({"_id": ObjectId(path.id)})
+    i = db.users.find_one({"_id": ObjectId(path.user_id)})
 
     if i is None:
         return UserNotFound().model_dump(), 404
@@ -76,7 +76,7 @@ def get_user(path: UserId):
 def update_user(path: UserId, body: UserPatch):
     try:
         result = db.users.update_one(
-            {"_id": ObjectId(path.id)},
+            {"_id": ObjectId(path.user_id)},
             {"$set": body.model_dump(exclude_none=True)},
         )
     except OperationFailure as e:
@@ -93,7 +93,7 @@ def update_user(path: UserId, body: UserPatch):
 
 @bp.delete("/<user_id>", tags=[users_tag], responses={204: None})
 def delete_user(path: UserId):
-    result = db.users.delete_one({"_id": ObjectId(path.id)})
+    result = db.users.delete_one({"_id": ObjectId(path.user_id)})
 
     if result.deleted_count < 1:
         return UserNotFound().model_dump(), 404
