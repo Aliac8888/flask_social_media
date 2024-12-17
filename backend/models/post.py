@@ -1,5 +1,4 @@
-from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from models.mongo import ObjectIdStr
 from models.datetime import DateTime
 

@@ -1,8 +1,6 @@
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
-from pydantic import BaseModel
 from models.user import *
-from models.mongo import ObjectIdStr
 from db import DUPLICATE_KEY, db
 from pymongo.errors import OperationFailure
 from bson import ObjectId
@@ -71,7 +69,9 @@ def get_user(path: UserId):
 
 
 @bp.patch(
-    "/<user_id>", tags=[users_tag], responses={204: None, 404: UserNotFound, 409: UserExists}
+    "/<user_id>",
+    tags=[users_tag],
+    responses={204: None, 404: UserNotFound, 409: UserExists},
 )
 def update_user(path: UserId, body: UserPatch):
     try:

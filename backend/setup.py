@@ -1,21 +1,21 @@
+import sys
 from db import USER_NOT_FOUND, client, db
 from config import maintenance, db_root_user, db_backend_user, db_backend_pass
 from pymongo.errors import OperationFailure
-
 
 if not maintenance:
     print(
         "Cannot setup the database without maintenance mode.",
         "Set SOCIAL_BE_MAINTENANCE=1 before running this script.",
     )
-    exit(1)
+    sys.exit(1)
 
 if db_backend_user == db_root_user:
     print(
         "During setup, backend username should not be the same as the root username.",
         "Set SOCIAL_BE_DB_USER and SOCIAL_BE_DB_PASS accordingly.",
     )
-    exit(2)
+    sys.exit(2)
 
 client.drop_database(db, comment="Setup")
 
