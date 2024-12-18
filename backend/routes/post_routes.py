@@ -31,6 +31,18 @@ def create_post(body: PostInit):
     return PostId(post_id=result.inserted_id).model_dump(), 201
 
 
+@bp.patch(
+    "/<post_id>", tags=[posts_tag], responses={200: PostWithId, 404: PostNotFound}
+)
+def get_post(path: PostId):
+    post = db.posts.find_one({"_id": path.post_id})
+
+    if post is None:
+        return PostNotFound().model_dump(), 404
+
+    return PostWithId(**post).model_dump()
+
+
 @bp.patch("/<post_id>", tags=[posts_tag], responses={204: None, 404: PostNotFound})
 def update_post(path: PostId, body: PostPatch):
     result = db.posts.update_one(
@@ -40,5 +52,16 @@ def update_post(path: PostId, body: PostPatch):
 
     if result.matched_count < 1:
         return PostNotFound().model_dump(), 404
+
+    return "", 204
+
+@bp.delete("/<post_id>", tags=[posts_tag], responses={204: None, 404: PostNotFound})
+def delete_post(path: PostId):
+    result = db.posts.delete_one({"_id": ObjectId(path.post_id)})
+
+    if result.deleted_count < 1:
+        return PostNotFound().model_dump(), 404
+
+    db.comments.delete_many({"post": ObjectId(path.post_id)})
 
     return "", 204
