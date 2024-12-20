@@ -25,3 +25,5 @@ db_port = int(non_falsy(getenv("SOCIAL_BE_DB_PORT")))
 
 be_host = non_falsy(getenv("SOCIAL_BE_HOST"))
 be_port = int(non_falsy(getenv("SOCIAL_BE_PORT")))
+
+fe_url = non_falsy(getenv("SOCIAL_BE_FE_URL"))
