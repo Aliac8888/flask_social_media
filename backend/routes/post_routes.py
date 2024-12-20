@@ -5,6 +5,7 @@ from models.post import *
 from db import db
 from bson import ObjectId
 import datetime
+
 # mm
 posts_tag = Tag(name="posts")
 bp = APIBlueprint("post", __name__, url_prefix="/posts")
@@ -15,6 +16,7 @@ def list_posts():
     posts = db.posts.find({}).to_list()
     return PostsList(posts=posts).model_dump()
 
+
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
 def get_posts(query: UserId):
     posts = db.posts.find({"author": {"$eq": ObjectId(query.user_id)}}).to_list()
@@ -22,9 +24,7 @@ def get_posts(query: UserId):
     return PostsList(posts=posts).model_dump()
 
 
-@bp.get(
-    "/feed", tags=[posts_tag], responses={200: PostsList, 404: UserNotFound}
-)
+@bp.get("/feed", tags=[posts_tag], responses={200: PostsList, 404: UserNotFound})
 def get_feed(query: UserId):
     user = db.users.find_one({"_id": ObjectId(query.user_id)})
 
@@ -34,7 +34,6 @@ def get_feed(query: UserId):
     posts = db.posts.find({"author": {"$in": user["friends"]}}).to_list()
 
     return PostsList(posts=posts).model_dump()
-
 
 
 @bp.post("/", tags=[posts_tag], responses={201: PostId})

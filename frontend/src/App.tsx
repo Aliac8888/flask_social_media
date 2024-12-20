@@ -1,9 +1,14 @@
 import {useEffect, useState} from 'preact/hooks';
-import {getPosts, createPost, updatePost, type Post} from './services/post.js';
+import {
+	getPosts,
+	createPost,
+	updatePost,
+	type PostWithId,
+} from './services/post.js';
 import {PostView} from './components/PostView.js';
 
 export function App() {
-	const [posts, setPosts] = useState<Post[]>([]);
+	const [posts, setPosts] = useState<PostWithId[]>([]);
 	const [newPostBody, setNewPostBody] = useState<string>('');
 
 	// Fetch posts on page load
@@ -20,7 +25,7 @@ export function App() {
 	async function handleCreatePost() {
 		if (!newPostBody) return;
 
-		await createPost({content: newPostBody, author: ""});
+		await createPost({content: newPostBody, author: ''});
 		setNewPostBody('');
 		const updatedPosts = await getPosts(); // Refresh the list
 		setPosts(updatedPosts);
@@ -28,7 +33,7 @@ export function App() {
 
 	// Handle special update (toggle star for a post)
 	async function handleUpdatePost(postId: string) {
-		await updatePost(postId, {content: newPostBody, author: ""});
+		await updatePost(postId, {content: newPostBody});
 		const updatedPosts = await getPosts(); // Refresh the list
 		setPosts(updatedPosts);
 	}
@@ -41,7 +46,9 @@ export function App() {
 				<h2>Create New Post</h2>
 				<textarea
 					value={newPostBody}
-					onInput={(e) => setNewPostBody(e.currentTarget.value)}
+					onInput={(event) => {
+						setNewPostBody(event.currentTarget.value);
+					}}
 					placeholder="Enter post content"
 				/>
 				<button onClick={handleCreatePost}>Create Post</button>
@@ -50,9 +57,11 @@ export function App() {
 			{/* List of Posts */}
 			<div>
 				{posts.map((post) => (
-					<div key={post._id} class="post-container">
+					<div key={post.id} class="post-container">
 						<PostView post={post} />
-						<button onClick={() => handleUpdatePost(post._id)}>Star Post</button>
+						<button onClick={async () => handleUpdatePost(post.id)}>
+							Star Post
+						</button>
 					</div>
 				))}
 			</div>

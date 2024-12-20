@@ -1,4 +1,4 @@
-import { createUser } from '../services/user.js';
+import {createUser} from '../services/user.js';
 import {FormInput} from './FormInput.js';
 
 export const CreateUserForm = ({

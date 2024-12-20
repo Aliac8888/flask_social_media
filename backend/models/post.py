@@ -25,7 +25,7 @@ class PostId(BaseModel):
 
 
 class PostWithId(Post):
-    id: Annotated[ObjectIdStr, Field(validation_alias='_id')]
+    id: Annotated[ObjectIdStr, Field(validation_alias="_id")]
 
 
 class PostNotFound(BaseModel):

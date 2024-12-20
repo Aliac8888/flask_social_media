@@ -24,7 +24,7 @@ class CommentId(BaseModel):
 
 
 class CommentWithId(Comment):
-    id: Annotated[ObjectIdStr, Field(validation_alias='_id')]
+    id: Annotated[ObjectIdStr, Field(validation_alias="_id")]
 
 
 class CommentNotFound(BaseModel):

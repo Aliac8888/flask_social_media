@@ -1,10 +1,10 @@
-import type {Comment} from '../services/comment.js';
+import type {CommentWithId} from '../services/comment.js';
 
-export function CommentView({comment}: {comment: Comment}) {
+export function CommentView({comment}: {comment: CommentWithId}) {
 	return (
 		<div class="comment-view">
 			{/* TODO: Add author profile view. */}
-			<div class="comment-view__body">{comment.body}</div>
+			<div class="comment-view__body">{comment.content}</div>
 		</div>
 	);
 }

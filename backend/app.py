@@ -7,6 +7,7 @@ from config import be_host, be_port, fe_url
 app = OpenAPI(__name__)
 CORS(app, origins=fe_url)
 
+
 @app.get("/", responses={302: None}, doc_ui=False)
 def redirect_to_openapi():
     return redirect("/openapi")
