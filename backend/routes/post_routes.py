@@ -1,6 +1,6 @@
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
-from backend.models.user import UserId, UserNotFound
+from models.user import UserId, UserNotFound
 from models.post import *
 from db import db
 from bson import ObjectId
