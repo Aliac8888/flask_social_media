@@ -4,3 +4,4 @@ node_modules
 /frontend/src/api
 **/__pycache__/
 .env
+*.tsbuildinfo
