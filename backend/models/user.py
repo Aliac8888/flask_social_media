@@ -1,9 +1,9 @@
-from typing import Annotated
-from pydantic import BaseModel, EmailStr, Field, model_validator
-from models.mongo import ObjectIdStr
+from pydantic import BaseModel, EmailStr, model_validator
+from models.mongo import ObjectIdStr, SelfIdStr
 
 
 class User(BaseModel):
+    id: SelfIdStr
     name: str
     email: EmailStr
 
@@ -25,21 +25,17 @@ class UserPatch(BaseModel):
         return self
 
 
+class UsersQuery(BaseModel):
+    following_id: ObjectIdStr | None = None
+
+
 class UserId(BaseModel):
     user_id: ObjectIdStr
 
 
-class Friend(UserId):
-    friend_id: ObjectIdStr
-
-
-class UserWithId(User):
-    id: Annotated[ObjectIdStr, Field(validation_alias="_id")]
-
-
-class UserWithFriends(UserWithId):
-    friends: list[UserWithId]
-    friended_by: list[UserWithId]
+class Following(BaseModel):
+    follower_id: ObjectIdStr
+    following_id: ObjectIdStr
 
 
 class UserNotFound(BaseModel):
@@ -51,4 +47,4 @@ class UserExists(BaseModel):
 
 
 class UsersList(BaseModel):
-    users: list[UserWithId]
+    users: list[User]

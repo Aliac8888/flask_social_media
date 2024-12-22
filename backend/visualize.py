@@ -8,7 +8,7 @@ for i in db.users.find({}):
         f'{dumps(str(i["_id"]))} [label={dumps(f"{i["_id"]}\n{i["name"]}\n{i["email"]}")}];'
     )
 
-    for j in i["friends"]:
+    for j in i["followings"]:
         print(f'{dumps(str(i["_id"]))} -> {dumps(str(j))};')
 
 print("}")

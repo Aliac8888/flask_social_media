@@ -12,14 +12,11 @@ bp = APIBlueprint("post", __name__, url_prefix="/posts")
 
 
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
-def list_posts():
-    posts = db.posts.find({}).to_list()
-    return PostsList(posts=posts).model_dump()
-
-
-@bp.get("/", tags=[posts_tag], responses={200: PostsList})
-def get_posts(query: UserId):
-    posts = db.posts.find({"author": {"$eq": ObjectId(query.user_id)}}).to_list()
+def get_posts(query: PostQuery):
+    if query.author_id is None:
+        posts = db.posts.find({}).to_list()
+    else:
+        posts = db.posts.find({"author": ObjectId(query.author_id)}).to_list()
 
     return PostsList(posts=posts).model_dump()
 
@@ -31,7 +28,7 @@ def get_feed(query: UserId):
     if user is None:
         return UserNotFound().model_dump(), 404
 
-    posts = db.posts.find({"author": {"$in": user["friends"]}}).to_list()
+    posts = db.posts.find({"author": {"$in": user["followings"]}}).to_list()
 
     return PostsList(posts=posts).model_dump()
 
@@ -52,16 +49,14 @@ def create_post(body: PostInit):
     return PostId(post_id=result.inserted_id).model_dump(), 201
 
 
-@bp.patch(
-    "/<post_id>", tags=[posts_tag], responses={200: PostWithId, 404: PostNotFound}
-)
+@bp.patch("/<post_id>", tags=[posts_tag], responses={200: Post, 404: PostNotFound})
 def get_post(path: PostId):
     post = db.posts.find_one({"_id": path.post_id})
 
     if post is None:
         return PostNotFound().model_dump(), 404
 
-    return PostWithId(**post).model_dump()
+    return Post.model_validate(post).model_dump()
 
 
 @bp.patch("/<post_id>", tags=[posts_tag], responses={204: None, 404: PostNotFound})

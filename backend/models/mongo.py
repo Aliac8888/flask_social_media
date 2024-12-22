@@ -1,5 +1,5 @@
 from typing import Annotated, Any
-from pydantic import AfterValidator, BeforeValidator
+from pydantic import AfterValidator, AliasChoices, BeforeValidator, Field
 from bson import ObjectId
 
 
@@ -17,3 +17,5 @@ def check_object_id(value: str) -> str:
 ObjectIdStr = Annotated[
     str, BeforeValidator(ensure_str), AfterValidator(check_object_id)
 ]
+
+SelfIdStr = Annotated[ObjectIdStr, Field(validation_alias=AliasChoices("id", "_id"))]

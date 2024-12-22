@@ -7,12 +7,19 @@ from bson import ObjectId
 
 
 users_tag = Tag(name="users")
+followings_tag = Tag(name="followings")
 bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 
-@bp.get("/", tags=[users_tag], responses={200: UsersList})
-def list_users():
-    users = db.users.find({}).to_list()
+@bp.get("/", tags=[users_tag, followings_tag], responses={200: UsersList})
+def list_users(query: UsersQuery):
+    if query.following_id is None:
+        users = db.users.find({}).to_list()
+    else:
+        users = db.users.find(
+            {"followings": ObjectId(query.following_id)},
+        ).to_list()
+
     return UsersList(users=users).model_dump()
 
 
@@ -27,7 +34,7 @@ def list_users():
 def create_user(body: UserInit):
     try:
         result = db.users.insert_one(
-            {"name": body.name, "email": body.email, "friends": []}
+            {"name": body.name, "email": body.email, "followings": []}
         )
     except OperationFailure as e:
         if e.code == DUPLICATE_KEY:
@@ -42,40 +49,17 @@ def create_user(body: UserInit):
     "/<user_id>",
     tags=[users_tag],
     responses={
-        200: UserWithFriends,
+        200: User,
         404: UserNotFound,
     },
 )
 def get_user(path: UserId):
-    cur = db.users.aggregate(
-        [
-            {"$match": {"_id": ObjectId(path.user_id)}},
-            {
-                "$lookup": {
-                    "from": "users",
-                    "localField": "friends",
-                    "foreignField": "_id",
-                    "as": "friends",
-                }
-            },
-            {
-                "$lookup": {
-                    "from": "users",
-                    "localField": "_id",
-                    "foreignField": "friends",
-                    "as": "friended_by",
-                }
-            },
-            {"$project": {"friends.friends": 0, "friended_by.friends": 0}},
-        ],
-    )
-
-    i = get_one(cur)
+    i = db.users.find_one({"_id": ObjectId(path.user_id)})
 
     if i is None:
         return UserNotFound().model_dump(), 404
 
-    return UserWithFriends(**i).model_dump()
+    return User.model_validate(i).model_dump()
 
 
 @bp.patch(
@@ -114,20 +98,36 @@ def delete_user(path: UserId):
     return "", 204
 
 
+@bp.get(
+    "/<user_id>/followings",
+    tags=[followings_tag],
+    responses={200: UsersList, 404: UserNotFound},
+)
+def get_user_following(path: UserId):
+    follower = db.users.find_one({"_id": ObjectId(path.user_id)})
+
+    if follower is None:
+        return UserNotFound().model_dump(), 404
+
+    followings = db.users.find({"_id": {"$in": follower["followings"]}}).to_list()
+
+    return UsersList(users=followings).model_dump()
+
+
 @bp.put(
-    "/<user_id>/following/<friend_id>",
-    tags=[users_tag],
+    "/<follower_id>/followings/<following_id>",
+    tags=[followings_tag],
     responses={204: None, 404: UserNotFound},
 )
-def follow_user(path: Friend):
-    friend = db.users.find_one({"_id": ObjectId(path.friend_id)})
+def follow_user(path: Following):
+    following = db.users.find_one({"_id": ObjectId(path.following_id)})
 
-    if friend is None:
+    if following is None:
         return UserNotFound().model_dump(), 404
 
     result = db.users.update_one(
-        {"_id": ObjectId(path.user_id)},
-        {"$addToSet": {"friends": ObjectId(path.friend_id)}},
+        {"_id": ObjectId(path.follower_id)},
+        {"$addToSet": {"followings": ObjectId(path.following_id)}},
     )
 
     if result.matched_count < 1:
@@ -137,19 +137,19 @@ def follow_user(path: Friend):
 
 
 @bp.delete(
-    "/<user_id>/following/<friend_id>",
-    tags=[users_tag],
+    "/<follower_id>/followings/<following_id>",
+    tags=[followings_tag],
     responses={204: None, 404: UserNotFound},
 )
-def unfollow_user(path: Friend):
-    friend = db.users.find_one({"_id": ObjectId(path.friend_id)})
+def unfollow_user(path: Following):
+    following = db.users.find_one({"_id": ObjectId(path.following_id)})
 
-    if friend is None:
+    if following is None:
         return UserNotFound().model_dump(), 404
 
     result = db.users.update_one(
-        {"_id": ObjectId(path.user_id)},
-        {"$pull": {"friends": ObjectId(path.friend_id)}},
+        {"_id": ObjectId(path.follower_id)},
+        {"$pull": {"followings": ObjectId(path.following_id)}},
     )
 
     if result.matched_count < 1:

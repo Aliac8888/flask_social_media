@@ -28,6 +28,17 @@ def create_comment(body: CommentInit):
     return CommentId(comment_id=result.inserted_id).model_dump(), 201
 
 
+@bp.get(
+    "/<comment_id>", tags=[comments_tag], responses={200: Comment, 404: CommentNotFound}
+)
+def get_comment(path: CommentId, body: CommentPatch):
+    i = db.comments.find_one({"_id": ObjectId(path.comment_id)})
+
+    if i is None:
+        return CommentNotFound().model_dump(), 404
+
+    return Comment.model_validate(i).model_dump()
+
 @bp.patch(
     "/<comment_id>", tags=[comments_tag], responses={204: None, 404: CommentNotFound}
 )
