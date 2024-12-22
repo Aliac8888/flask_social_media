@@ -49,9 +49,9 @@ def create_post(body: PostInit):
     return PostId(post_id=result.inserted_id).model_dump(), 201
 
 
-@bp.patch("/<post_id>", tags=[posts_tag], responses={200: Post, 404: PostNotFound})
+@bp.get("/<post_id>", tags=[posts_tag], responses={200: Post, 404: PostNotFound})
 def get_post(path: PostId):
-    post = db.posts.find_one({"_id": path.post_id})
+    post = db.posts.find_one({"_id": ObjectId(path.post_id)})
 
     if post is None:
         return PostNotFound().model_dump(), 404
