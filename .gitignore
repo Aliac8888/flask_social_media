@@ -1,6 +1,6 @@
 /.venv
 /.vscode
 node_modules
-api.d.ts
+/frontend/src/api
 **/__pycache__/
 .env

@@ -1,6 +1,6 @@
-import type {PostWithId} from '../services/post.js';
+import type {Post} from '../api/index.js';
 
-export function PostView({post}: {post: PostWithId}) {
+export function PostView({post}: {post: Post}) {
 	return (
 		<div class="post-view">
 			{/* TODO: Add author profile view. */}

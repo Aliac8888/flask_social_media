@@ -1,6 +1,6 @@
-import type {UserWithFriends} from '../services/user.js';
+import type {User} from '../api/index.js';
 
-export function UserProfile({user}: {user: UserWithFriends}) {
+export function UserProfile({user}: {user: User}) {
 	return (
 		<div class="user-profile">
 			<div class="user-profile__name">{user.name}</div>

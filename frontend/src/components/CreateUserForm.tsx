@@ -1,4 +1,4 @@
-import {createUser} from '../services/user.js';
+import {userPost} from '../api/sdk.gen.js';
 import {FormInput} from './FormInput.js';
 
 export const CreateUserForm = ({
@@ -13,9 +13,11 @@ export const CreateUserForm = ({
 
 				const formData = new FormData(event.currentTarget, event.submitter);
 
-				await createUser({
-					name: String(formData.get('username')),
-					email: String(formData.get('email')),
+				await userPost({
+					body: {
+						name: String(formData.get('username')),
+						email: String(formData.get('email')),
+					},
 				});
 			}}
 		>
