@@ -1,8 +1,9 @@
+import datetime
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
 from models.post import PostId
 from models.comment import *
-from db import db
+from db import db, get_one
 from bson import ObjectId
 
 comments_tag = Tag(name="comments")
@@ -11,17 +12,35 @@ bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 
 @bp.get("/", tags=[comments_tag], responses={200: CommentsList})
 def get_comments(query: PostId):
-    comments = db.comments.find({"post": ObjectId(query.post_id)}).to_list()
+    comments = db.comments.aggregate(
+        [
+            {"$match": {"post": ObjectId(query.post_id)}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "author",
+                    "foreignField": "_id",
+                    "as": "author",
+                }
+            },
+            {"$unwind": {"path": "$author"}},
+        ]
+    ).to_list()
+
     return CommentsList(comments=comments).model_dump()
 
 
 @bp.post("/", tags=[comments_tag], responses={201: CommentId})
 def create_comment(body: CommentInit):
+    now = datetime.datetime.now(datetime.UTC)
+
     result = db.comments.insert_one(
         {
             "content": body.content,
             "author": ObjectId(body.author),
             "post": ObjectId(body.post),
+            "creation_time": now,
+            "modification_time": now,
         }
     )
 
@@ -31,21 +50,44 @@ def create_comment(body: CommentInit):
 @bp.get(
     "/<comment_id>", tags=[comments_tag], responses={200: Comment, 404: CommentNotFound}
 )
-def get_comment(path: CommentId, body: CommentPatch):
-    i = db.comments.find_one({"_id": ObjectId(path.comment_id)})
+def get_comment(path: CommentId):
+    i = get_one(
+        db.comments.aggregate(
+            [
+                {"$match": {"_id": ObjectId(path.comment_id)}},
+                {
+                    "$lookup": {
+                        "from": "users",
+                        "localField": "author",
+                        "foreignField": "_id",
+                        "as": "author",
+                    }
+                },
+                {"$unwind": {"path": "$author"}},
+            ]
+        )
+    )
 
     if i is None:
         return CommentNotFound().model_dump(), 404
 
     return Comment.model_validate(i).model_dump()
 
+
 @bp.patch(
     "/<comment_id>", tags=[comments_tag], responses={204: None, 404: CommentNotFound}
 )
 def update_comment(path: CommentId, body: CommentPatch):
+    now = datetime.datetime.now(datetime.UTC)
+
     result = db.comments.update_one(
         {"_id": ObjectId(path.comment_id)},
-        {"$set": body.model_dump(exclude_none=True)},
+        {
+            "$set": {
+                **body.model_dump(exclude_none=True),
+                "modification_time": now,
+            }
+        },
     )
 
     if result.matched_count < 1:

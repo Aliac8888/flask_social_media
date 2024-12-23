@@ -92,6 +92,19 @@ def delete_user(path: UserId):
     if result.deleted_count < 1:
         return UserNotFound().model_dump(), 404
 
+    db.users.update_many(
+        {"followings": ObjectId(path.user_id)},
+        {"$pull": {"followings": ObjectId(path.user_id)}},
+    )
+
+    posts = db.posts.find(
+        {"author": ObjectId(path.user_id)},
+        {"_id": 1},
+    ).to_list()
+
+    if posts:
+        db.comments.delete_many({"post": {"$in": [i["_id"] for i in posts]}})
+
     db.posts.delete_many({"author": ObjectId(path.user_id)})
     db.comments.delete_many({"author": ObjectId(path.user_id)})
 

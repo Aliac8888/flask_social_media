@@ -1,12 +1,16 @@
 from pydantic import BaseModel
+from models.user import User
 from models.mongo import ObjectIdStr, SelfIdStr
+from models.datetime import DateTime
 
 
 class Comment(BaseModel):
     id: SelfIdStr
     content: str
-    author: ObjectIdStr
+    author: User
     post: ObjectIdStr
+    creation_time: DateTime
+    modification_time: DateTime
 
 
 class CommentInit(BaseModel):

@@ -10,15 +10,18 @@ export const CreateUserForm = ({
 		<form
 			onSubmit={async (event) => {
 				event.preventDefault();
-
 				const formData = new FormData(event.currentTarget, event.submitter);
 
-				await userPost({
+				const {data} = await userPost({
 					body: {
 						name: String(formData.get('username')),
 						email: String(formData.get('email')),
 					},
 				});
+
+				if (data) {
+					onCreated?.(data.user_id);
+				}
 			}}
 		>
 			<FormInput name="username" label="Username" required />
