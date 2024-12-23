@@ -1,3 +1,4 @@
+import datetime
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
 from models.post import PostId
@@ -17,11 +18,15 @@ def get_comments(query: PostId):
 
 @bp.post("/", tags=[comments_tag], responses={201: CommentId})
 def create_comment(body: CommentInit):
+    now = datetime.datetime.now(datetime.UTC)
+
     result = db.comments.insert_one(
         {
             "content": body.content,
             "author": ObjectId(body.author),
             "post": ObjectId(body.post),
+            "creation_time": now,
+            "modification_time": now,
         }
     )
 
@@ -39,13 +44,21 @@ def get_comment(path: CommentId, body: CommentPatch):
 
     return Comment.model_validate(i).model_dump()
 
+
 @bp.patch(
     "/<comment_id>", tags=[comments_tag], responses={204: None, 404: CommentNotFound}
 )
 def update_comment(path: CommentId, body: CommentPatch):
+    now = datetime.datetime.now(datetime.UTC)
+
     result = db.comments.update_one(
         {"_id": ObjectId(path.comment_id)},
-        {"$set": body.model_dump(exclude_none=True)},
+        {
+            "$set": {
+                **body.model_dump(exclude_none=True),
+                "modification_time": now,
+            }
+        },
     )
 
     if result.matched_count < 1:

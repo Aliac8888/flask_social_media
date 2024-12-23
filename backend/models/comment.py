@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from models.mongo import ObjectIdStr, SelfIdStr
+from models.datetime import DateTime
 
 
 class Comment(BaseModel):
@@ -7,6 +8,8 @@ class Comment(BaseModel):
     content: str
     author: ObjectIdStr
     post: ObjectIdStr
+    creation_time: DateTime
+    modification_time: DateTime
 
 
 class CommentInit(BaseModel):
