@@ -2,6 +2,7 @@ import {useEffect, useState} from 'preact/hooks';
 import {PostView} from './components/PostView.js';
 import {postGet, postPost, postPostIdPatch, type Post} from './api/index.js';
 import {useAsyncEffect} from './async-effect.js';
+import styles from './App.module.css';
 
 export function App() {
 	const [posts, setPosts] = useState<Post[]>([]);
@@ -17,7 +18,7 @@ export function App() {
 	async function handleCreatePost() {
 		if (!newPostBody) return;
 
-		await postPost({body: {author: '', content: newPostBody}});
+		await postPost({body: {author: '6769be135d544f6e96e574c1', content: newPostBody}});
 		setNewPostBody('');
 
 		const {data} = await postGet();
@@ -37,32 +38,31 @@ export function App() {
 	}
 
 	return (
-		<div>
-			<h1>Posts</h1>
-			{/* New Post Form */}
-			<div>
-				<h2>Create New Post</h2>
-				<textarea
-					value={newPostBody}
-					onInput={(event) => {
-						setNewPostBody(event.currentTarget.value);
-					}}
-					placeholder="Enter post content"
-				/>
-				<button onClick={handleCreatePost}>Create Post</button>
-			</div>
+    <div className={styles['app-container']}>
+      <h1 className={styles.header}>Posts</h1>
+      
+      {/* New Post Form */}
+      <div className={styles['create-post']}>
+        <h2>Create New Post</h2>
+        <textarea
+          value={newPostBody}
+          onInput={(event) => setNewPostBody(event.currentTarget.value)}
+          placeholder="Enter post content"
+        />
+        <button onClick={handleCreatePost}>Create Post</button>
+      </div>
 
-			{/* List of Posts */}
-			<div>
-				{posts.map((post) => (
-					<div key={post.id} class="post-container">
-						<PostView post={post} />
-						<button onClick={async () => handleUpdatePost(post.id)}>
-							Star Post
-						</button>
-					</div>
-				))}
-			</div>
-		</div>
-	);
+      {/* List of Posts */}
+      <div className={styles['posts-list']}>
+        {posts.map((post) => (
+          <div key={post.id} className="post-container">
+            <PostView post={post} />
+            <button onClick={() => handleUpdatePost(post.id)}>
+              Star Post
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
