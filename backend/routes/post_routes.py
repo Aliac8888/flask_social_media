@@ -2,7 +2,7 @@ from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
 from models.user import UserId, UserNotFound
 from models.post import *
-from db import db
+from db import db, get_one
 from bson import ObjectId
 import datetime
 
@@ -14,9 +14,24 @@ bp = APIBlueprint("post", __name__, url_prefix="/posts")
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
 def get_posts(query: PostQuery):
     if query.author_id is None:
-        posts = db.posts.find({}).to_list()
+        match_query = {}
     else:
-        posts = db.posts.find({"author": ObjectId(query.author_id)}).to_list()
+        match_query = {"author": ObjectId(query.author_id)}
+
+    posts = db.posts.aggregate(
+        [
+            {"$match": match_query},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "author",
+                    "foreignField": "_id",
+                    "as": "author",
+                }
+            },
+            {"$unwind": {"path": "$author"}},
+        ]
+    ).to_list()
 
     return PostsList(posts=posts).model_dump()
 
@@ -28,7 +43,20 @@ def get_feed(query: UserId):
     if user is None:
         return UserNotFound().model_dump(), 404
 
-    posts = db.posts.find({"author": {"$in": user["followings"]}}).to_list()
+    posts = db.posts.aggregate(
+        [
+            {"$match": {"author": {"$in": user["followings"]}}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "author",
+                    "foreignField": "_id",
+                    "as": "author",
+                }
+            },
+            {"$unwind": {"path": "$author"}},
+        ]
+    ).to_list()
 
     return PostsList(posts=posts).model_dump()
 
@@ -51,7 +79,22 @@ def create_post(body: PostInit):
 
 @bp.get("/<post_id>", tags=[posts_tag], responses={200: Post, 404: PostNotFound})
 def get_post(path: PostId):
-    post = db.posts.find_one({"_id": ObjectId(path.post_id)})
+    post = get_one(
+        db.posts.aggregate(
+            [
+                {"$match": {"_id": ObjectId(path.post_id)}},
+                {
+                    "$lookup": {
+                        "from": "users",
+                        "localField": "author",
+                        "foreignField": "_id",
+                        "as": "author",
+                    }
+                },
+                {"$unwind": {"path": "$author"}},
+            ]
+        )
+    )
 
     if post is None:
         return PostNotFound().model_dump(), 404

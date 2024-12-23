@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from models.user import User
 from models.mongo import ObjectIdStr, SelfIdStr
 from models.datetime import DateTime
 
@@ -8,7 +9,7 @@ class Post(BaseModel):
     content: str
     creation_time: DateTime
     modification_time: DateTime
-    author: ObjectIdStr
+    author: User
 
 
 class PostInit(BaseModel):
