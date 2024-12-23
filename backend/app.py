@@ -5,7 +5,7 @@ from routes import user_routes, post_routes, comment_routes
 from config import be_host, be_port, fe_url
 
 app = OpenAPI(__name__)
-CORS(app, origins=fe_url)
+CORS(app, origins=[fe_url,"http://localhost:5173"])
 
 
 @app.get("/", responses={302: None}, doc_ui=False)
