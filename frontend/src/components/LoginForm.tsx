@@ -29,7 +29,7 @@ export function LoginForm({
 			<FormInput type="password" name="password" label="Password" required />
 			<div>
 				<button type="reset">Clear</button>
-				<button>Create</button>
+				<button>Login</button>
 			</div>
 		</form>
 	);
