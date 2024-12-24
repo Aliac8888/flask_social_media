@@ -1,10 +1,13 @@
 import type {User} from '../api/index.js';
+import styles from './UserView.module.css';
 
 export function UserView({user}: {user: User}) {
-	return (
-		<div class="user-view">
-			<div class="user-view__name">{user.name}</div>
-			<div class="user-view__email">{user.email}</div>
-		</div>
-	);
+	const avatar = user.name.charAt(0).toUpperCase();
+
+  return (
+    <div className={styles['user-view']}>
+      <div className={styles['user-view__avatar']}>{avatar}</div>
+      <div className={styles['user-view__name']}>{user.name}</div>
+    </div>
+  );
 }

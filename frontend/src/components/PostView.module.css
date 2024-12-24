@@ -1,0 +1,37 @@
+/* src/components/PostView.module.css */
+
+.post-view {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-view--show-modification-time {
+  border-color: #007bff;
+}
+
+.post-view__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.post-view__creation-time,
+.post-view__modification-time {
+  font-size: 12px;
+  color: #666;
+  margin-left: 10px;
+}
+
+.post-view__body {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.post-view__special {
+  font-size: 20px;
+  color: gold;
+  margin-right: 10px;
+}
