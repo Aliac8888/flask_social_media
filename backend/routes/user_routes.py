@@ -32,7 +32,7 @@ def list_users(query: UsersQuery):
     "/",
     tags=[users_tag, auth_tag],
     responses={
-        201: UserId,
+        201: AuthResponse,
         403: AuthFailed,
         409: UserExists,
     },
@@ -61,7 +61,10 @@ def create_user(body: UserInit):
 
         raise
 
-    return UserId(user_id=result.inserted_id).model_dump(), 201
+    user = db.users.find_one({"_id": result.inserted_id})
+    assert user is not None
+
+    return AuthResponse(user=user, jwt=create_access_token(user)).model_dump()
 
 
 @bp.post("/login", tags=[auth_tag], responses={200: AuthResponse, 403: AuthFailed})
