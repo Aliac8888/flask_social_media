@@ -7,6 +7,7 @@ import styles from './App.module.css';
 export function App() {
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [newPostBody, setNewPostBody] = useState<string>('');
+	const {auth} = useUser();
 
 	// Fetch posts on page load
 	useAsyncEffect(async () => {
@@ -16,9 +17,11 @@ export function App() {
 
 	// Handle new post creation
 	async function handleCreatePost() {
-		if (!newPostBody) return;
+		if (!newPostBody || !auth) return;
 
-		await postPost({body: {author: '6769be135d544f6e96e574c1', content: newPostBody}});
+		await postPost({
+			body: {author: auth.user.id, content: newPostBody},
+		});
 		setNewPostBody('');
 
 		const {data} = await postGet();
