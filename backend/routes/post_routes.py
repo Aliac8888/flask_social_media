@@ -58,7 +58,7 @@ def get_feed(query: UserId):
 
     posts = db.posts.aggregate(
         [
-            {"$match": {"author": {"$in": user["followings"]}}},
+            {"$match": {"author": {"$in": [user["_id"], *user["followings"]]}}},
             {
                 "$lookup": {
                     "from": "users",
