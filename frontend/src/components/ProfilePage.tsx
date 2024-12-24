@@ -40,7 +40,7 @@ export function ProfilePage({userId}: {userId: string | User}) {
 	return user ? (
 		<div class="profile-page">
 			<div class="profile-page__profile">
-				<UserView user={user} />
+				<UserView user={user} editable />
 			</div>
 			<div class="profile-page__tab-container">
 				<div class="profile-page__tab-bar">

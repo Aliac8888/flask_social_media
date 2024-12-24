@@ -23,3 +23,14 @@
   font-weight: bold;
   color: #333;
 }
+
+.user-view__email {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #3336;
+}
+
+.user-view textarea {
+  color: black;
+}
