@@ -2,7 +2,7 @@ import {userLoginPost} from '../api/sdk.gen.js';
 import type {AuthResponse} from '../api/types.gen.js';
 import {FormInput} from './FormInput.js';
 
-export function LoginPage({
+export function LoginForm({
 	onLoggedIn,
 }: {
 	onLoggedIn?: (auth: AuthResponse) => void;

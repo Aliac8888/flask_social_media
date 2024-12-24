@@ -1,10 +1,11 @@
 import {userPost} from '../api/sdk.gen.js';
+import type { AuthResponse } from '../api/types.gen.js';
 import {FormInput} from './FormInput.js';
 
 export const SignupForm = ({
 	onSignedUp,
 }: {
-	onSignedUp?: (id: string) => void;
+	onSignedUp?: (auth: AuthResponse) => void;
 }) => {
 	return (
 		<form
@@ -13,7 +14,6 @@ export const SignupForm = ({
 				const formData = new FormData(event.currentTarget, event.submitter);
 
 				const {data} = await userPost({
-
 					body: {
 						name: String(formData.get('username')),
 						email: String(formData.get('email')),
@@ -22,7 +22,7 @@ export const SignupForm = ({
 				});
 
 				if (data) {
-					onSignedUp?.(data.user_id);
+					onSignedUp?.(data);
 				}
 			}}
 		>
