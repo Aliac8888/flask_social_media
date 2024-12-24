@@ -24,6 +24,7 @@ export function App() {
 		const {data} = auth
 			? await postFeedGet({query: {user_id: auth.user.id}})
 			: await postGet();
+
 		setPosts(data?.posts ?? []);
 	}, [auth?.user.id]);
 
@@ -36,7 +37,9 @@ export function App() {
 		});
 		setNewPostBody('');
 
-		const {data} = await postGet();
+		const {data} = auth
+			? await postFeedGet({query: {user_id: auth.user.id}})
+			: await postGet();
 		setPosts(data?.posts ?? []);
 	}
 
@@ -48,7 +51,9 @@ export function App() {
 			body: {content: newPostBody},
 		});
 
-		const {data} = await postGet();
+		const {data} = auth
+			? await postFeedGet({query: {user_id: auth.user.id}})
+			: await postGet();
 		setPosts(data?.posts ?? []);
 	}
 
@@ -78,7 +83,9 @@ export function App() {
 						<PostPage
 							post={post}
 							onUpdate={async () => {
-								const {data} = await postGet();
+								const {data} = auth
+									? await postFeedGet({query: {user_id: auth.user.id}})
+									: await postGet();
 								setPosts(data?.posts ?? []);
 							}}
 						/>
