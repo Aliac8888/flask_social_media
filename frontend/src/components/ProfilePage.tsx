@@ -7,8 +7,8 @@ import {
 } from '../api/index.js';
 import {useAsyncEffect} from '../async-effect.js';
 import {UserView} from './UserView.js';
-import {FollowersView} from './FollowersView.js';
 import {FollowingsView} from './FollowingsView.js';
+import './ProfilePage.css';
 
 export function ProfilePage({userId}: {userId: string | User}) {
 	const [user, setUser] = useState<User | undefined>(
@@ -38,11 +38,14 @@ export function ProfilePage({userId}: {userId: string | User}) {
 	const [tab, setTab] = useState<'followers' | 'followings' | undefined>();
 
 	return user ? (
-		<div>
-			<UserView user={user} />
-			<div>
-				<div>
+		<div class="profile-page">
+			<div class="profile-page__profile">
+				<UserView user={user} />
+			</div>
+			<div class="profile-page__tab-container">
+				<div class="profile-page__tab-bar">
 					<button
+						class={`profile-page__tab-button ${tab === 'followers' ? 'profile-page--tab-active' : ''}`}
 						onClick={() => {
 							setTab('followers');
 						}}
@@ -50,6 +53,7 @@ export function ProfilePage({userId}: {userId: string | User}) {
 						Followers
 					</button>
 					<button
+						class={`profile-page__tab-button ${tab === 'followings' ? 'profile-page--tab-active' : ''}`}
 						onClick={() => {
 							setTab('followings');
 						}}
@@ -58,13 +62,15 @@ export function ProfilePage({userId}: {userId: string | User}) {
 					</button>
 				</div>
 				{tab === 'followers' ? (
-					<FollowersView user={user} />
+					<FollowingsView user={user} reversed />
 				) : tab === 'followings' ? (
 					<FollowingsView user={user} />
 				) : null}
 			</div>
 		</div>
 	) : (
-		<div>Loading…</div>
+		<div class="profile-page">
+			<p class="profile-page__loader">Loading…</p>
+		</div>
 	);
 }
