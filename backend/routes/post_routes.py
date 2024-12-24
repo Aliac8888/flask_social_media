@@ -1,5 +1,7 @@
+from flask_jwt_extended import current_user, jwt_required
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
+from models.auth import AuthFailed, JwtIdentity
 from models.user import UserId, UserNotFound
 from models.post import *
 from db import db, get_one
@@ -14,13 +16,13 @@ bp = APIBlueprint("post", __name__, url_prefix="/posts")
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
 def get_posts(query: PostQuery):
     if query.author_id is None:
-        match_query = {}
+        filter = {}
     else:
-        match_query = {"author": ObjectId(query.author_id)}
+        filter = {"author": ObjectId(query.author_id)}
 
     posts = db.posts.aggregate(
         [
-            {"$match": match_query},
+            {"$match": filter},
             {
                 "$lookup": {
                     "from": "users",
@@ -36,8 +38,19 @@ def get_posts(query: PostQuery):
     return PostsList(posts=posts).model_dump()
 
 
-@bp.get("/feed", tags=[posts_tag], responses={200: PostsList, 404: UserNotFound})
+@bp.get(
+    "/feed",
+    tags=[posts_tag],
+    security=[{"jwt": []}],
+    responses={200: PostsList, 403: AuthFailed, 404: UserNotFound},
+)
+@jwt_required()
 def get_feed(query: UserId):
+    assert isinstance(current_user, JwtIdentity)
+
+    if current_user.user_id != query.user_id and not current_user.admin:
+        return AuthFailed().model_dump(), 403
+
     user = db.users.find_one({"_id": ObjectId(query.user_id)})
 
     if user is None:
@@ -61,8 +74,19 @@ def get_feed(query: UserId):
     return PostsList(posts=posts).model_dump()
 
 
-@bp.post("/", tags=[posts_tag], responses={201: PostId})
+@bp.post(
+    "/",
+    tags=[posts_tag],
+    security=[{"jwt": []}],
+    responses={201: PostId, 403: AuthFailed},
+)
+@jwt_required()
 def create_post(body: PostInit):
+    assert isinstance(current_user, JwtIdentity)
+
+    if current_user.user_id != body.author and not current_user.admin:
+        return AuthFailed().model_dump(), 403
+
     now = datetime.datetime.now(datetime.UTC)
 
     result = db.posts.insert_one(
@@ -102,12 +126,23 @@ def get_post(path: PostId):
     return Post.model_validate(post).model_dump()
 
 
-@bp.patch("/<post_id>", tags=[posts_tag], responses={204: None, 404: PostNotFound})
+@bp.patch(
+    "/<post_id>",
+    tags=[posts_tag],
+    security=[{"jwt": []}],
+    responses={204: None, 404: PostNotFound},
+)
+@jwt_required()
 def update_post(path: PostId, body: PostPatch):
+    assert isinstance(current_user, JwtIdentity)
     now = datetime.datetime.now(datetime.UTC)
+    filter = {"_id": ObjectId(path.post_id)}
+
+    if not current_user.admin:
+        filter["author"] = ObjectId(current_user.user_id)
 
     result = db.posts.update_one(
-        {"_id": ObjectId(path.post_id)},
+        filter,
         {
             "$set": {
                 **body.model_dump(exclude_none=True),
@@ -122,9 +157,21 @@ def update_post(path: PostId, body: PostPatch):
     return "", 204
 
 
-@bp.delete("/<post_id>", tags=[posts_tag], responses={204: None, 404: PostNotFound})
+@bp.delete(
+    "/<post_id>",
+    tags=[posts_tag],
+    security=[{"jwt": []}],
+    responses={204: None, 404: PostNotFound},
+)
+@jwt_required()
 def delete_post(path: PostId):
-    result = db.posts.delete_one({"_id": ObjectId(path.post_id)})
+    assert isinstance(current_user, JwtIdentity)
+    filter = {"_id": ObjectId(path.post_id)}
+
+    if not current_user.admin:
+        filter["author"] = ObjectId(current_user.user_id)
+
+    result = db.posts.delete_one(filter)
 
     if result.deleted_count < 1:
         return PostNotFound().model_dump(), 404

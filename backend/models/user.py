@@ -11,15 +11,17 @@ class User(BaseModel):
 class UserInit(BaseModel):
     name: str
     email: EmailStr
+    password: str
 
 
 class UserPatch(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
+    password: str | None = None
 
     @model_validator(mode="after")
     def is_non_empty(self):
-        if self.name is None and self.email is None:
+        if self.name is None and self.email is None and self.password is None:
             raise ValueError("patch is empty")
 
         return self

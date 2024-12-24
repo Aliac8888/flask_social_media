@@ -27,3 +27,9 @@ be_host = non_falsy(getenv("SOCIAL_BE_HOST"))
 be_port = int(non_falsy(getenv("SOCIAL_BE_PORT")))
 
 fe_url = non_falsy(getenv("SOCIAL_BE_FE_URL"))
+
+jwt_secret = non_falsy(getenv("SOCIAL_BE_JWT_SECRET"))
+jwt_expiry = int(getenv("SOCIAL_BE_JWT_EXPIRY") or "0")
+
+admin_email = non_falsy(getenv("SOCIAL_BE_ADMIN_EMAIL"))
+admin_pass = non_falsy(getenv("SOCIAL_BE_ADMIN_PASS"))

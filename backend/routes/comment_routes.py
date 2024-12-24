@@ -1,6 +1,8 @@
 import datetime
+from flask_jwt_extended import current_user, jwt_required
 from flask_openapi3.models.tag import Tag
 from flask_openapi3.blueprint import APIBlueprint
+from models.auth import JwtIdentity, AuthFailed
 from models.post import PostId
 from models.comment import *
 from db import db, get_one
@@ -30,8 +32,19 @@ def get_comments(query: PostId):
     return CommentsList(comments=comments).model_dump()
 
 
-@bp.post("/", tags=[comments_tag], responses={201: CommentId})
+@bp.post(
+    "/",
+    tags=[comments_tag],
+    security=[{"jwt": []}],
+    responses={201: CommentId, 403: AuthFailed},
+)
+@jwt_required()
 def create_comment(body: CommentInit):
+    assert isinstance(current_user, JwtIdentity)
+
+    if current_user.user_id != body.author and not current_user.admin:
+        return AuthFailed().model_dump(), 403
+
     now = datetime.datetime.now(datetime.UTC)
 
     result = db.comments.insert_one(
@@ -75,13 +88,22 @@ def get_comment(path: CommentId):
 
 
 @bp.patch(
-    "/<comment_id>", tags=[comments_tag], responses={204: None, 404: CommentNotFound}
+    "/<comment_id>",
+    tags=[comments_tag],
+    security=[{"jwt": []}],
+    responses={204: None, 404: CommentNotFound},
 )
+@jwt_required()
 def update_comment(path: CommentId, body: CommentPatch):
+    assert isinstance(current_user, JwtIdentity)
     now = datetime.datetime.now(datetime.UTC)
+    filter = {"_id": ObjectId(path.comment_id)}
+
+    if not current_user.admin:
+        filter["author"] = ObjectId(current_user.user_id)
 
     result = db.comments.update_one(
-        {"_id": ObjectId(path.comment_id)},
+        filter,
         {
             "$set": {
                 **body.model_dump(exclude_none=True),
@@ -97,10 +119,20 @@ def update_comment(path: CommentId, body: CommentPatch):
 
 
 @bp.delete(
-    "/<comment_id>", tags=[comments_tag], responses={204: None, 404: CommentNotFound}
+    "/<comment_id>",
+    tags=[comments_tag],
+    security=[{"jwt": []}],
+    responses={204: None, 404: CommentNotFound},
 )
-def delete_comment(comment_id):
-    result = db.comments.delete_one({"_id": ObjectId(comment_id)})
+@jwt_required()
+def delete_comment(path: CommentId):
+    assert isinstance(current_user, JwtIdentity)
+    filter = {"_id": ObjectId(path.comment_id)}
+
+    if not current_user.admin:
+        filter["author"] = ObjectId(current_user.user_id)
+
+    result = db.comments.delete_one(filter)
 
     if result.deleted_count < 1:
         return CommentNotFound().model_dump(), 404

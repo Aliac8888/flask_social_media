@@ -3,10 +3,12 @@ from math import ceil
 
 from tqdm import tqdm
 from app import app
+from models.auth import AuthRequest, AuthResponse
 from models.comment import CommentInit
 from models.post import Post, PostId, PostInit
 from models.user import User, UserInit, UsersList
 from random import randint, random, shuffle, sample
+from config import admin_email, admin_pass
 from faker import Faker
 import setup
 
@@ -98,6 +100,18 @@ def generate_social_graph(users: list[User]):
 faker = Faker()
 
 with app.test_client() as c:
+    print("Authenticating….")
+
+    jwt = AuthResponse.model_validate(
+        c.post(
+            "/users/login",
+            json=AuthRequest(
+                email=admin_email,
+                password=admin_pass,
+            ).model_dump(),
+        ).json
+    ).jwt
+
     print("Creating users….")
 
     for _ in tqdm(range(randint(USERS_MIN, USERS_MAX))):
@@ -109,6 +123,7 @@ with app.test_client() as c:
             json=UserInit(
                 name=f"{first} {last}",
                 email=f"{first}.{last}@example.com".lower(),
+                password="",
             ).model_dump(),
         )
 
@@ -157,20 +172,25 @@ with app.test_client() as c:
             post_id = PostId.model_validate(
                 c.post(
                     "/posts/",
-                    json=PostInit(author=post_author.id, content=faker.text()).model_dump(),
+                    headers={"Authorization": f"Bearer {jwt}"},
+                    json=PostInit(
+                        author=post_author.id, content=faker.text()
+                    ).model_dump(),
                 ).json
             ).post_id
 
+            if random() < POST_NO_COMMENT_ODDS:
+                continue
 
-        if random() < POST_NO_COMMENT_ODDS:
-            continue
-
-        for comment_author in sample(users, randint_norm(POST_MIN_COMMENTS, POST_MAX_COMMENTS)):
-            c.post(
-                "/comments/",
-                json=CommentInit(
-                    author=comment_author.id,
-                    post=post_id,
-                    content=faker.text(),
-                ).model_dump(),
-            )
+            for comment_author in sample(
+                users, randint_norm(POST_MIN_COMMENTS, POST_MAX_COMMENTS)
+            ):
+                c.post(
+                    "/comments/",
+                    headers={"Authorization": f"Bearer {jwt}"},
+                    json=CommentInit(
+                        author=comment_author.id,
+                        post=post_id,
+                        content=faker.text(),
+                    ).model_dump(),
+                )

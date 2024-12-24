@@ -1,6 +1,15 @@
 import sys
+from app import app
+from models.user import UserInit
 from db import USER_NOT_FOUND, client, db
-from config import maintenance, db_root_user, db_backend_user, db_backend_pass
+from config import (
+    maintenance,
+    db_root_user,
+    db_backend_user,
+    db_backend_pass,
+    admin_email,
+    admin_pass,
+)
 from pymongo.errors import OperationFailure
 
 if not maintenance:
@@ -43,3 +52,13 @@ client.admin.command(
 )
 
 db.users.create_index("email", unique=True)
+
+with app.test_client() as c:
+    c.post(
+        "/users/",
+        json=UserInit(
+            name="Admin",
+            email=admin_email,
+            password=admin_pass,
+        ).model_dump(),
+    )
