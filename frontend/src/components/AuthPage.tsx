@@ -18,19 +18,37 @@ export function AuthPage({
 	const user = useUser();
 
 	return action === 'login' ? (
-		<LoginForm
-			onLoggedIn={(auth) => {
-				user.auth = auth;
-				onAuthenticated?.('login', auth);
-			}}
-		/>
+		<div>
+			<button
+				onClick={() => {
+					setAction(undefined);
+				}}
+			>
+				Back
+			</button>
+			<LoginForm
+				onLoggedIn={(auth) => {
+					user.auth = auth;
+					onAuthenticated?.('login', auth);
+				}}
+			/>
+		</div>
 	) : action === 'signup' ? (
-		<SignupForm
-			onSignedUp={(auth) => {
-				user.auth = auth;
-				onAuthenticated?.('signup', auth);
-			}}
-		/>
+		<div>
+			<button
+				onClick={() => {
+					setAction(undefined);
+				}}
+			>
+				Back
+			</button>
+			<SignupForm
+				onSignedUp={(auth) => {
+					user.auth = auth;
+					onAuthenticated?.('signup', auth);
+				}}
+			/>
+		</div>
 	) : (
 		<div>
 			<button
