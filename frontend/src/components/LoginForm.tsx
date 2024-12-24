@@ -1,6 +1,7 @@
 import {userLoginPost} from '../api/sdk.gen.js';
 import type {AuthResponse} from '../api/types.gen.js';
 import {FormInput} from './FormInput.js';
+import './LoginForm.css';
 
 export function LoginForm({
 	onLoggedIn,
@@ -9,6 +10,7 @@ export function LoginForm({
 }) {
 	return (
 		<form
+			class="login-form"
 			onSubmit={async (event) => {
 				event.preventDefault();
 				const formData = new FormData(event.currentTarget, event.submitter);
@@ -27,7 +29,7 @@ export function LoginForm({
 		>
 			<FormInput type="email" name="email" label="Email" required />
 			<FormInput type="password" name="password" label="Password" required />
-			<div>
+			<div class="login-form__controls">
 				<button type="reset">Clear</button>
 				<button>Login</button>
 			</div>

@@ -1,0 +1,27 @@
+.auth-page__bar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	margin: 15px
+}
+
+.auth-page__button {
+	margin-top: 10px;
+	padding: 10px 15px;
+	background-color: #007bff;
+	border: none;
+	color: white;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.auth-page__back {
+	margin-top: 10px;
+	padding: 10px 15px;
+	background-color: #007bff;
+	border: none;
+	color: white;
+	border-radius: 4px;
+	cursor: pointer;
+}

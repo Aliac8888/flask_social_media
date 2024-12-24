@@ -1,0 +1,26 @@
+.signup-form {
+	display: flex;
+	gap: 10px;
+	margin-block: 10px;
+	flex-direction: column;
+}
+
+.signup-form__controls {
+	display: flex;
+	gap: 10px
+}
+
+.signup-form button {
+	margin-top: 10px;
+	padding: 10px 15px;
+	background-color: #007bff;
+	border: none;
+	color: white;
+	border-radius: 4px;
+	cursor: pointer;
+
+}
+
+.signup-form button[type=reset] {
+	background-color: #ff7b00;
+}

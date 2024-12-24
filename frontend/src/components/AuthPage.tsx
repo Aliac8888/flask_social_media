@@ -3,6 +3,7 @@ import {useUser} from '../user.js';
 import type {AuthResponse} from '../api/types.gen.js';
 import {LoginForm} from './LoginForm.js';
 import {SignupForm} from './SignupForm.js';
+import './AuthPage.css';
 
 export function AuthPage({
 	initialAction,
@@ -18,8 +19,9 @@ export function AuthPage({
 	const user = useUser();
 
 	return action === 'login' ? (
-		<div>
+		<div class="auth-page">
 			<button
+				class="auth-page__back"
 				onClick={() => {
 					setAction(undefined);
 				}}
@@ -34,8 +36,9 @@ export function AuthPage({
 			/>
 		</div>
 	) : action === 'signup' ? (
-		<div>
+		<div class="auth-page">
 			<button
+				class="auth-page__back"
 				onClick={() => {
 					setAction(undefined);
 				}}
@@ -50,21 +53,25 @@ export function AuthPage({
 			/>
 		</div>
 	) : (
-		<div>
-			<button
-				onClick={() => {
-					setAction('login');
-				}}
-			>
-				Login
-			</button>
-			<button
-				onClick={() => {
-					setAction('signup');
-				}}
-			>
-				Signup
-			</button>
+		<div class="auth-page">
+			<div class="auth-page__bar">
+				<button
+					class="auth-page__button"
+					onClick={() => {
+						setAction('login');
+					}}
+				>
+					Login
+				</button>
+				<button
+					class="auth-page__button"
+					onClick={() => {
+						setAction('signup');
+					}}
+				>
+					Signup
+				</button>
+			</div>
 		</div>
 	);
 }
