@@ -1,11 +1,18 @@
 import {useEffect, useState} from 'preact/hooks';
 import {PostView} from './components/PostView.js';
-import {postGet, postPost, postPostIdPatch, type Post} from './api/index.js';
+import {
+	postFeedGet,
+	postGet,
+	postPost,
+	postPostIdPatch,
+	type Post,
+} from './api/index.js';
 import {useAsyncEffect} from './async-effect.js';
 import styles from './App.module.css';
 import {ProfilePage} from './components/ProfilePage.js';
 import {AuthPage} from './components/AuthPage.js';
 import {useUser} from './user.js';
+import {PostPage} from './components/PostPage.js';
 
 export function App() {
 	const [posts, setPosts] = useState<Post[]>([]);
@@ -14,9 +21,11 @@ export function App() {
 
 	// Fetch posts on page load
 	useAsyncEffect(async () => {
-		const {data} = await postGet();
+		const {data} = auth
+			? await postFeedGet({query: {user_id: auth.user.id}})
+			: await postGet();
 		setPosts(data?.posts ?? []);
-	}, []);
+	}, [auth?.user.id]);
 
 	// Handle new post creation
 	async function handleCreatePost() {
@@ -66,7 +75,7 @@ export function App() {
 			<div className={styles['posts-list']}>
 				{posts.map((post) => (
 					<div key={post.id} className="post-container">
-						<PostView
+						<PostPage
 							post={post}
 							onUpdate={async () => {
 								const {data} = await postGet();
