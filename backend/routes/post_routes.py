@@ -3,7 +3,7 @@ from flask_openapi3.blueprint import APIBlueprint
 from models.user import UserId, UserNotFound
 from models.post import *
 from db import db, get_one
-from bson import ObjectId
+from bson.objectid import ObjectId
 import datetime
 
 # mm

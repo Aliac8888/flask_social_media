@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 from pydantic import AfterValidator, AliasChoices, BeforeValidator, Field
-from bson import ObjectId
+from bson.objectid import ObjectId
 
 
 def ensure_str(value: Any):

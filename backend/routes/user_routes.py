@@ -3,7 +3,7 @@ from flask_openapi3.blueprint import APIBlueprint
 from models.user import *
 from db import DUPLICATE_KEY, get_one, db
 from pymongo.errors import OperationFailure
-from bson import ObjectId
+from bson.objectid import ObjectId
 
 
 users_tag = Tag(name="users")

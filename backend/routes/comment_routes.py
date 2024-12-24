@@ -4,7 +4,7 @@ from flask_openapi3.blueprint import APIBlueprint
 from models.post import PostId
 from models.comment import *
 from db import db, get_one
-from bson import ObjectId
+from bson.objectid import ObjectId
 
 comments_tag = Tag(name="comments")
 bp = APIBlueprint("comment", __name__, url_prefix="/comments")
