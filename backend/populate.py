@@ -138,7 +138,10 @@ with app.test_client() as c:
     print("Following users….")
     for follower_id, followables in tqdm(followings.items()):
         for following_id in followables:
-            result = c.put(f"/users/{follower_id}/followings/{following_id}")
+            result = c.put(
+                f"/users/{follower_id}/followings/{following_id}",
+                headers={"Authorization": f"Bearer {jwt}"},
+            )
 
     print("Finding isolated users….")
     isolated_users = {i.id for i in users}
@@ -156,7 +159,10 @@ with app.test_client() as c:
     print("Found", len(users_to_remove), "isolated users. Deleting excess….")
 
     for user in tqdm(users_to_remove[USERS_MAX_ISOLATED:]):
-        c.delete(f"/users/{user}")
+        c.delete(
+            f"/users/{user}",
+            headers={"Authorization": f"Bearer {jwt}"},
+        )
 
     print("Retrieving user list… (again).")
     users = UsersList.model_validate(c.get("/users/").json).users
