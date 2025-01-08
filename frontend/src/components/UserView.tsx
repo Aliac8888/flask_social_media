@@ -1,5 +1,11 @@
 import {useState} from 'preact/hooks';
-import {userUserIdDelete, userUserIdPatch, type User} from '../api/index.js';
+import {
+	userFollowerIdFollowingsFollowingIdDelete,
+	userFollowerIdFollowingsFollowingIdPut,
+	userUserIdDelete,
+	userUserIdPatch,
+	type User,
+} from '../api/index.js';
 import {useUser} from '../user.js';
 import styles from './UserView.module.css';
 
@@ -45,7 +51,7 @@ export function UserView({
 					)}
 				</div>
 			)}
-			{user.id === context.auth?.user.id ? (
+			{user.id === context.auth?.user.id && editable ? (
 				editing ? (
 					<div>
 						<button
@@ -95,7 +101,37 @@ export function UserView({
 						</button>
 					</div>
 				)
-			) : null}
+			) : (
+				context.auth &&
+				user.id !== context.auth?.user.id && (
+					<div>
+						<button
+							onClick={async () => {
+								await userFollowerIdFollowingsFollowingIdPut({
+									path: {
+										follower_id: context.auth!.user.id,
+										following_id: user.id,
+									},
+								});
+							}}
+						>
+							Follow
+						</button>
+						<button
+							onClick={async () => {
+								await userFollowerIdFollowingsFollowingIdDelete({
+									path: {
+										follower_id: context.auth!.user.id,
+										following_id: user.id,
+									},
+								});
+							}}
+						>
+							Unfollow
+						</button>
+					</div>
+				)
+			)}
 		</div>
 	);
 }
