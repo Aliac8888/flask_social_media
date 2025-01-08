@@ -17,16 +17,18 @@ import {PostPage} from './components/PostPage.js';
 export function App() {
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [newPostBody, setNewPostBody] = useState<string>('');
+	const [local, setLocal] = useState(false);
 	const {auth} = useUser();
 
 	// Fetch posts on page load
 	useAsyncEffect(async () => {
-		const {data} = auth
-			? await postFeedGet({query: {user_id: auth.user.id}})
-			: await postGet();
+		const {data} =
+			auth && local
+				? await postFeedGet({query: {user_id: auth.user.id}})
+				: await postGet();
 
 		setPosts(data?.posts ?? []);
-	}, [auth?.user.id]);
+	}, [auth?.user.id, local]);
 
 	// Handle new post creation
 	async function handleCreatePost() {
@@ -37,9 +39,10 @@ export function App() {
 		});
 		setNewPostBody('');
 
-		const {data} = auth
-			? await postFeedGet({query: {user_id: auth.user.id}})
-			: await postGet();
+		const {data} =
+			auth && local
+				? await postFeedGet({query: {user_id: auth.user.id}})
+				: await postGet();
 		setPosts(data?.posts ?? []);
 	}
 
@@ -51,9 +54,10 @@ export function App() {
 			body: {content: newPostBody},
 		});
 
-		const {data} = auth
-			? await postFeedGet({query: {user_id: auth.user.id}})
-			: await postGet();
+		const {data} =
+			auth && local
+				? await postFeedGet({query: {user_id: auth.user.id}})
+				: await postGet();
 		setPosts(data?.posts ?? []);
 	}
 
@@ -61,6 +65,14 @@ export function App() {
 		<div className={styles['app-container']}>
 			<AuthPage />
 			{auth && <ProfilePage userId={auth.user.id} />}
+
+			<button
+				onClick={() => {
+					setLocal(!local);
+				}}
+			>
+				{local ? 'local' : 'global'}
+			</button>
 			<h1 className={styles.header}>Posts</h1>
 
 			{/* New Post Form */}
@@ -78,19 +90,24 @@ export function App() {
 
 			{/* List of Posts */}
 			<div className={styles['posts-list']}>
-				{posts.map((post) => (
-					<div key={post.id} className="post-container">
-						<PostPage
-							post={post}
-							onUpdate={async () => {
-								const {data} = auth
-									? await postFeedGet({query: {user_id: auth.user.id}})
-									: await postGet();
-								setPosts(data?.posts ?? []);
-							}}
-						/>
-					</div>
-				))}
+				{/* TODO: Paginate the posts. */}
+				{posts
+					.slice(-100)
+					.reverse()
+					.map((post) => (
+						<div key={post.id} className="post-container">
+							<PostPage
+								post={post}
+								onUpdate={async () => {
+									const {data} =
+										auth && local
+											? await postFeedGet({query: {user_id: auth.user.id}})
+											: await postGet();
+									setPosts(data?.posts ?? []);
+								}}
+							/>
+						</div>
+					))}
 			</div>
 		</div>
 	);
