@@ -15,6 +15,7 @@ dependencies = [
     "flask-bcrypt>=1.0.1",
     "flask-jwt-extended>=4.7.1",
     "pymongo>=4.10.1",
+    "gunicorn>=23.0.0",
 ]
 
 [tool.mypy]
