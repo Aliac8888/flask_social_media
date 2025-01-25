@@ -1,5 +1,4 @@
 from bson.objectid import ObjectId
-from flask.typing import ResponseReturnValue
 from flask_jwt_extended import create_access_token, jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -28,7 +27,7 @@ bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 
 @bp.get("/", tags=[users_tag, followings_tag], responses={200: UsersList})
-def list_users(query: UsersQuery) -> ResponseReturnValue:
+def list_users(query: UsersQuery):  # noqa: ANN201
     if query.following_id is None:
         users = db.users.find({}).to_list()
     else:
@@ -48,7 +47,7 @@ def list_users(query: UsersQuery) -> ResponseReturnValue:
         409: UserExists,
     },
 )
-def create_user(body: UserInit) -> ResponseReturnValue:
+def create_user(body: UserInit):  # noqa: ANN201
     if body.email == admin_email and not maintenance:
         return UserExists().model_dump(), 409
 
@@ -85,7 +84,7 @@ def create_user(body: UserInit) -> ResponseReturnValue:
     tags=[auth_tag],
     responses={200: AuthResponse, 403: AuthFailed},
 )
-def login(body: AuthRequest) -> ResponseReturnValue:
+def login(body: AuthRequest):  # noqa: ANN201
     user = db.users.find_one({"email": body.email})
 
     if user is None:
@@ -111,7 +110,7 @@ def login(body: AuthRequest) -> ResponseReturnValue:
         404: UserNotFound,
     },
 )
-def get_user(path: UserId) -> ResponseReturnValue:
+def get_user(path: UserId):  # noqa: ANN201
     i = db.users.find_one({"_id": ObjectId(path.user_id)})
 
     if i is None:
@@ -132,7 +131,7 @@ def get_user(path: UserId) -> ResponseReturnValue:
     },
 )
 @jwt_required()
-def update_user(path: UserId, body: UserPatch) -> ResponseReturnValue:
+def update_user(path: UserId, body: UserPatch):  # noqa: ANN201
     if current_user.user_id != path.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -177,7 +176,7 @@ def update_user(path: UserId, body: UserPatch) -> ResponseReturnValue:
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def delete_user(path: UserId) -> ResponseReturnValue:
+def delete_user(path: UserId):  # noqa: ANN201
     if current_user.user_id != path.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -212,7 +211,7 @@ def delete_user(path: UserId) -> ResponseReturnValue:
     tags=[followings_tag],
     responses={200: UsersList, 404: UserNotFound},
 )
-def get_user_following(path: UserId) -> ResponseReturnValue:
+def get_user_following(path: UserId):  # noqa: ANN201
     follower = db.users.find_one({"_id": ObjectId(path.user_id)})
 
     if follower is None:
@@ -230,7 +229,7 @@ def get_user_following(path: UserId) -> ResponseReturnValue:
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def follow_user(path: Following) -> ResponseReturnValue:
+def follow_user(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -257,7 +256,7 @@ def follow_user(path: Following) -> ResponseReturnValue:
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def unfollow_user(path: Following) -> ResponseReturnValue:
+def unfollow_user(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 

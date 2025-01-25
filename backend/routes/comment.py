@@ -1,7 +1,6 @@
 import datetime
 
 from bson.objectid import ObjectId
-from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -24,7 +23,7 @@ bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 
 
 @bp.get("/", tags=[comments_tag], responses={200: CommentsList})
-def get_comments(query: PostId) -> ResponseReturnValue:
+def get_comments(query: PostId):  # noqa: ANN201
     comments = db.comments.aggregate(
         [
             {"$match": {"post": ObjectId(query.post_id)}},
@@ -50,7 +49,7 @@ def get_comments(query: PostId) -> ResponseReturnValue:
     responses={201: CommentId, 403: AuthFailed},
 )
 @jwt_required()
-def create_comment(body: CommentInit) -> ResponseReturnValue:
+def create_comment(body: CommentInit):  # noqa: ANN201
     if current_user.user_id != body.author and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -74,7 +73,7 @@ def create_comment(body: CommentInit) -> ResponseReturnValue:
     tags=[comments_tag],
     responses={200: Comment, 404: CommentNotFound},
 )
-def get_comment(path: CommentId) -> ResponseReturnValue:
+def get_comment(path: CommentId):  # noqa: ANN201
     i = get_one(
         db.comments.aggregate(
             [
@@ -105,7 +104,7 @@ def get_comment(path: CommentId) -> ResponseReturnValue:
     responses={204: None, 404: CommentNotFound},
 )
 @jwt_required()
-def update_comment(path: CommentId, body: CommentPatch) -> ResponseReturnValue:
+def update_comment(path: CommentId, body: CommentPatch):  # noqa: ANN201
     now = datetime.datetime.now(datetime.UTC)
     comment_filter = {"_id": ObjectId(path.comment_id)}
 
@@ -135,7 +134,7 @@ def update_comment(path: CommentId, body: CommentPatch) -> ResponseReturnValue:
     responses={204: None, 404: CommentNotFound},
 )
 @jwt_required()
-def delete_comment(path: CommentId) -> ResponseReturnValue:
+def delete_comment(path: CommentId):  # noqa: ANN201
     comment_filter = {"_id": ObjectId(path.comment_id)}
 
     if not current_user.admin:

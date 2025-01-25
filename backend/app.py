@@ -1,6 +1,5 @@
 from flask import redirect
 from flask_openapi3.openapi import OpenAPI
-from werkzeug.wrappers.response import Response
 
 import plugins
 from config import be_host, be_port, jwt_expiry, jwt_secret
@@ -22,7 +21,7 @@ plugins.jwt.init_app(app)
 
 
 @app.get("/", responses={302: None}, doc_ui=False)
-def redirect_to_openapi() -> Response:
+def redirect_to_openapi():  # noqa: ANN201
     return redirect("/openapi")
 
 
