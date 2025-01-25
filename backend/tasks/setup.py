@@ -3,8 +3,9 @@ from logging import getLogger
 
 from pymongo.errors import OperationFailure
 
-from app import create_app
-from config import (
+from models.api.user import UserInit
+from server.app import create_app
+from server.config import (
     admin_email,
     admin_pass,
     db_backend_pass,
@@ -12,8 +13,7 @@ from config import (
     db_root_user,
     maintenance,
 )
-from db import USER_NOT_FOUND, client, db
-from models.api.user import UserInit
+from server.db import USER_NOT_FOUND, client, db
 
 logger = getLogger(__name__)
 

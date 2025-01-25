@@ -5,7 +5,6 @@ from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
-from db import db, get_one
 from models.api.auth import AuthFailed
 from models.api.post import (
     Post,
@@ -17,7 +16,8 @@ from models.api.post import (
     PostsList,
 )
 from models.api.user import UserId, UserNotFound
-from plugins import current_user
+from server.db import db, get_one
+from server.plugins import current_user
 
 posts_tag = Tag(name="posts")
 bp = APIBlueprint("post", __name__, url_prefix="/posts")

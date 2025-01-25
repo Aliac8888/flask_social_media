@@ -20,9 +20,12 @@ dependencies = [
 [tool.mypy]
 plugins = ['pydantic.mypy']
 
+[tool.ruff]
+cache-dir = ".venv/cache/ruff"
+
 [tool.ruff.lint]
 select = ['ALL']
-ignore = ['D', 'COM812']
+ignore = ['D', 'COM812', 'S606']
 
 [tool.ruff.format]
 docstring-code-format = true

@@ -5,7 +5,6 @@ from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
-from db import db, get_one
 from models.api.auth import AuthFailed
 from models.api.comment import (
     Comment,
@@ -16,7 +15,8 @@ from models.api.comment import (
     CommentsList,
 )
 from models.api.post import PostId
-from plugins import current_user
+from server.db import db, get_one
+from server.plugins import current_user
 
 comments_tag = Tag(name="comments")
 bp = APIBlueprint("comment", __name__, url_prefix="/comments")

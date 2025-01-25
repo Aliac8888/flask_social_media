@@ -1,8 +1,8 @@
 from flask_openapi3.openapi import OpenAPI
 
-import plugins
-from config import jwt_expiry, jwt_secret
 from routes import bp
+from server import plugins
+from server.config import jwt_expiry, jwt_secret
 
 
 def create_app() -> OpenAPI:

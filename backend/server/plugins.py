@@ -5,8 +5,8 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_current_user
 from werkzeug.local import LocalProxy
 
-from config import admin_email, fe_url
 from models.api.auth import JwtIdentity
+from server.config import admin_email, fe_url
 
 bcrypt = Bcrypt()
 cors = CORS(origins=fe_url)

@@ -1,7 +1,7 @@
 from json import dumps
 from sys import stdout
 
-from db import db
+from server.db import db
 
 stdout.write("digraph U {\n")
 

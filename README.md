@@ -24,8 +24,8 @@ Frontend Stack:
 - `docker-compose up -d` (Runs database)
 - `cd backend`
 - `uv sync`
-- `SOCIAL_BE_MAINTENANCE=1 uv run setup.py`
-- `uv run app.py &` (Runs backend)
+- `SOCIAL_BE_MAINTENANCE=1 uv run tasks/setup.py`
+- `uv run server &` (Runs backend)
 - `cd ../frontend`
 - `pnpm install`
 - `pnpm vite &` (Runs frontend)

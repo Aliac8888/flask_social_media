@@ -4,8 +4,6 @@ from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 from pymongo.errors import OperationFailure
 
-from config import admin_email, maintenance
-from db import DUPLICATE_KEY, db
 from models.api.auth import AuthFailed, AuthRequest, AuthResponse
 from models.api.user import (
     Following,
@@ -18,7 +16,9 @@ from models.api.user import (
     UsersList,
     UsersQuery,
 )
-from plugins import bcrypt, current_user
+from server.config import admin_email, maintenance
+from server.db import DUPLICATE_KEY, db
+from server.plugins import bcrypt, current_user
 
 users_tag = Tag(name="users")
 followings_tag = Tag(name="followings")

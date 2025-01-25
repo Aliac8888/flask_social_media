@@ -4,7 +4,7 @@ from urllib.parse import quote_plus
 from pymongo import MongoClient
 from pymongo.command_cursor import CommandCursor
 
-from config import db_host, db_pass, db_port, db_user
+from server.config import db_host, db_pass, db_port, db_user
 
 USER_NOT_FOUND = 11
 DUPLICATE_KEY = 11000
