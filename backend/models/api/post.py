@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from models.api.mongo import ObjectIdStr, SelfIdStr
 from models.api.temporal import Instant
@@ -34,5 +34,4 @@ class PostNotFound(BaseModel):
     message: str = "Post not found"
 
 
-class PostsList(BaseModel):
-    posts: list[Post]
+PostsList = RootModel[list[Post]]

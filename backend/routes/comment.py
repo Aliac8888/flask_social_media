@@ -40,7 +40,7 @@ def get_comments(query: PostId) -> ResponseReturnValue:
         ],
     ).to_list()
 
-    return CommentsList(comments=comments).model_dump()
+    return CommentsList(comments).model_dump()
 
 
 @bp.post(

@@ -1,6 +1,6 @@
 from typing import Self
 
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, RootModel, model_validator
 
 from models.api.error import EmptyPatchError
 from models.api.mongo import ObjectIdStr, SelfIdStr
@@ -52,5 +52,4 @@ class UserExists(BaseModel):
     message: str = "User already exists"
 
 
-class UsersList(BaseModel):
-    users: list[User]
+UsersList = RootModel[list[User]]

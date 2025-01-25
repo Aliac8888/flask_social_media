@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from models.api.mongo import ObjectIdStr, SelfIdStr
 from models.api.temporal import Instant
@@ -32,5 +32,4 @@ class CommentNotFound(BaseModel):
     message: str = "Comment not found"
 
 
-class CommentsList(BaseModel):
-    comments: list[Comment]
+CommentsList = RootModel[list[Comment]]

@@ -134,7 +134,7 @@ with app.test_client() as c:
         )
 
     logger.info("Retrieving user list….")
-    users = UsersList.model_validate(c.get("/users/").json).users
+    users = UsersList.model_validate(c.get("/users/").json).root
 
     if not users:
         logger.critical("There were no users, somehow.")
@@ -175,7 +175,7 @@ with app.test_client() as c:
         )
 
     logger.info("Retrieving user list… (again).")
-    users = UsersList.model_validate(c.get("/users/").json).users
+    users = UsersList.model_validate(c.get("/users/").json).root
 
     if not users:
         logger.critical("There were no users, somehow.")

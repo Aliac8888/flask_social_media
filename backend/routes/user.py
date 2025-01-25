@@ -36,7 +36,7 @@ def list_users(query: UsersQuery) -> ResponseReturnValue:
             {"followings": ObjectId(query.following_id)},
         ).to_list()
 
-    return UsersList(users=users).model_dump()
+    return UsersList(users).model_dump()
 
 
 @bp.post(
@@ -220,7 +220,7 @@ def get_user_following(path: UserId) -> ResponseReturnValue:
 
     followings = db.users.find({"_id": {"$in": follower["followings"]}}).to_list()
 
-    return UsersList(users=followings).model_dump()
+    return UsersList(followings).model_dump()
 
 
 @bp.put(

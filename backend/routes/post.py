@@ -45,7 +45,7 @@ def get_posts(query: PostQuery) -> ResponseReturnValue:
         ],
     ).to_list()
 
-    return PostsList(posts=posts).model_dump()
+    return PostsList(posts).model_dump()
 
 
 @bp.get(
@@ -83,7 +83,7 @@ def get_feed(query: UserId) -> ResponseReturnValue:
         ],
     ).to_list()
 
-    return PostsList(posts=posts).model_dump()
+    return PostsList(posts).model_dump()
 
 
 @bp.post(
