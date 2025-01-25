@@ -1,14 +1,15 @@
 from pydantic import BaseModel
-from models.user import User
-from models.mongo import ObjectIdStr, SelfIdStr
-from models.datetime import DateTime
+
+from models.api.mongo import ObjectIdStr, SelfIdStr
+from models.api.temporal import Instant
+from models.api.user import User
 
 
 class Post(BaseModel):
     id: SelfIdStr
     content: str
-    creation_time: DateTime
-    modification_time: DateTime
+    creation_time: Instant
+    modification_time: Instant
     author: User
 
 
@@ -23,6 +24,7 @@ class PostPatch(BaseModel):
 
 class PostQuery(BaseModel):
     author_id: ObjectIdStr | None = None
+
 
 class PostId(BaseModel):
     post_id: ObjectIdStr

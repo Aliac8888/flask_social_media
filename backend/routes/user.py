@@ -1,14 +1,25 @@
-from flask_jwt_extended import create_access_token, current_user, jwt_required
-from flask_openapi3.models.tag import Tag
-from flask_openapi3.blueprint import APIBlueprint
-from models.user import *
-from models.auth import *
-from db import DUPLICATE_KEY, get_one, db
-from pymongo.errors import OperationFailure
 from bson.objectid import ObjectId
-from plugins import bcrypt
-from config import admin_email, maintenance
+from flask.typing import ResponseReturnValue
+from flask_jwt_extended import create_access_token, jwt_required
+from flask_openapi3.blueprint import APIBlueprint
+from flask_openapi3.models.tag import Tag
+from pymongo.errors import OperationFailure
 
+from config import admin_email, maintenance
+from db import DUPLICATE_KEY, db
+from models.api.auth import AuthFailed, AuthRequest, AuthResponse
+from models.api.user import (
+    Following,
+    User,
+    UserExists,
+    UserId,
+    UserInit,
+    UserNotFound,
+    UserPatch,
+    UsersList,
+    UsersQuery,
+)
+from plugins import bcrypt, current_user
 
 users_tag = Tag(name="users")
 followings_tag = Tag(name="followings")
@@ -17,7 +28,7 @@ bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 
 @bp.get("/", tags=[users_tag, followings_tag], responses={200: UsersList})
-def list_users(query: UsersQuery):
+def list_users(query: UsersQuery) -> ResponseReturnValue:
     if query.following_id is None:
         users = db.users.find({}).to_list()
     else:
@@ -37,7 +48,7 @@ def list_users(query: UsersQuery):
         409: UserExists,
     },
 )
-def create_user(body: UserInit):
+def create_user(body: UserInit) -> ResponseReturnValue:
     if body.email == admin_email and not maintenance:
         return UserExists().model_dump(), 409
 
@@ -46,29 +57,35 @@ def create_user(body: UserInit):
 
     credential = bcrypt.generate_password_hash(body.password) if body.password else b""
 
+    user = {
+        "name": body.name,
+        "email": body.email,
+        "credential": credential,
+        "followings": [],
+    }
+
     try:
-        result = db.users.insert_one(
-            {
-                "name": body.name,
-                "email": body.email,
-                "credential": credential,
-                "followings": [],
-            }
-        )
+        result = db.users.insert_one(user)
     except OperationFailure as e:
         if e.code == DUPLICATE_KEY:
             return UserExists().model_dump(), 409
 
         raise
 
-    user = db.users.find_one({"_id": result.inserted_id})
-    assert user is not None
+    user["_id"] = result.inserted_id
 
-    return AuthResponse(user=user, jwt=create_access_token(user)).model_dump()
+    return AuthResponse(
+        user=User.model_validate(user),
+        jwt=create_access_token(user),
+    ).model_dump()
 
 
-@bp.post("/login", tags=[auth_tag], responses={200: AuthResponse, 403: AuthFailed})
-def login(body: AuthRequest):
+@bp.post(
+    "/login",
+    tags=[auth_tag],
+    responses={200: AuthResponse, 403: AuthFailed},
+)
+def login(body: AuthRequest) -> ResponseReturnValue:
     user = db.users.find_one({"email": body.email})
 
     if user is None:
@@ -78,7 +95,8 @@ def login(body: AuthRequest):
         return AuthFailed().model_dump(), 403
 
     if user["credential"] and not bcrypt.check_password_hash(
-        user["credential"], body.password
+        user["credential"],
+        body.password,
     ):
         return AuthFailed().model_dump(), 403
 
@@ -93,7 +111,7 @@ def login(body: AuthRequest):
         404: UserNotFound,
     },
 )
-def get_user(path: UserId):
+def get_user(path: UserId) -> ResponseReturnValue:
     i = db.users.find_one({"_id": ObjectId(path.user_id)})
 
     if i is None:
@@ -106,12 +124,15 @@ def get_user(path: UserId):
     "/<user_id>",
     tags=[users_tag],
     security=[{"jwt": []}],
-    responses={204: None, 403: AuthFailed, 404: UserNotFound, 409: UserExists},
+    responses={
+        204: None,
+        403: AuthFailed,
+        404: UserNotFound,
+        409: UserExists,
+    },
 )
 @jwt_required()
-def update_user(path: UserId, body: UserPatch):
-    assert isinstance(current_user, JwtIdentity)
-
+def update_user(path: UserId, body: UserPatch) -> ResponseReturnValue:
     if current_user.user_id != path.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -156,14 +177,12 @@ def update_user(path: UserId, body: UserPatch):
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def delete_user(path: UserId):
-    assert isinstance(current_user, JwtIdentity)
-
+def delete_user(path: UserId) -> ResponseReturnValue:
     if current_user.user_id != path.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
     result = db.users.delete_one(
-        {"_id": ObjectId(path.user_id), "email": {"$ne": {"$literal": admin_email}}}
+        {"_id": ObjectId(path.user_id), "email": {"$ne": {"$literal": admin_email}}},
     )
 
     if result.deleted_count < 1:
@@ -193,7 +212,7 @@ def delete_user(path: UserId):
     tags=[followings_tag],
     responses={200: UsersList, 404: UserNotFound},
 )
-def get_user_following(path: UserId):
+def get_user_following(path: UserId) -> ResponseReturnValue:
     follower = db.users.find_one({"_id": ObjectId(path.user_id)})
 
     if follower is None:
@@ -211,9 +230,7 @@ def get_user_following(path: UserId):
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def follow_user(path: Following):
-    assert isinstance(current_user, JwtIdentity)
-
+def follow_user(path: Following) -> ResponseReturnValue:
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -240,9 +257,7 @@ def follow_user(path: Following):
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def unfollow_user(path: Following):
-    assert isinstance(current_user, JwtIdentity)
-
+def unfollow_user(path: Following) -> ResponseReturnValue:
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 

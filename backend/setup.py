@@ -1,27 +1,32 @@
 import sys
-from app import app
-from models.user import UserInit
-from db import USER_NOT_FOUND, client, db
-from config import (
-    maintenance,
-    db_root_user,
-    db_backend_user,
-    db_backend_pass,
-    admin_email,
-    admin_pass,
-)
+from logging import getLogger
+
 from pymongo.errors import OperationFailure
 
+from app import app
+from config import (
+    admin_email,
+    admin_pass,
+    db_backend_pass,
+    db_backend_user,
+    db_root_user,
+    maintenance,
+)
+from db import USER_NOT_FOUND, client, db
+from models.api.user import UserInit
+
+logger = getLogger(__name__)
+
 if not maintenance:
-    print(
-        "Cannot setup the database without maintenance mode.",
+    logger.critical(
+        "Cannot setup the database without maintenance mode. "
         "Set SOCIAL_BE_MAINTENANCE=1 before running this script.",
     )
     sys.exit(1)
 
 if db_backend_user == db_root_user:
-    print(
-        "During setup, backend username should not be the same as the root username.",
+    logger.critical(
+        "During setup, backend username should not be the same as the root username. "
         "Set SOCIAL_BE_DB_USER and SOCIAL_BE_DB_PASS accordingly.",
     )
     sys.exit(2)

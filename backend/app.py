@@ -1,29 +1,28 @@
 from flask import redirect
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 from flask_openapi3.openapi import OpenAPI
-from plugins import *
-from routes import user, post, comment
-from config import be_host, be_port, jwt_secret, jwt_expiry
-from flask_bcrypt import Bcrypt
+from werkzeug.wrappers.response import Response
+
+import plugins
+from config import be_host, be_port, jwt_expiry, jwt_secret
+from routes import comment, post, user
 
 app = OpenAPI(
     __name__,
     security_schemes={
-        "jwt": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+        "jwt": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
     },
 )
 
 app.config["JWT_SECRET_KEY"] = jwt_secret
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = jwt_expiry
 
-bcrypt.init_app(app)
-cors.init_app(app)
-jwt.init_app(app)
+plugins.bcrypt.init_app(app)
+plugins.cors.init_app(app)
+plugins.jwt.init_app(app)
 
 
 @app.get("/", responses={302: None}, doc_ui=False)
-def redirect_to_openapi():
+def redirect_to_openapi() -> Response:
     return redirect("/openapi")
 
 

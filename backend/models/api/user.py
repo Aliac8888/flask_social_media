@@ -1,5 +1,9 @@
+from typing import Self
+
 from pydantic import BaseModel, EmailStr, model_validator
-from models.mongo import ObjectIdStr, SelfIdStr
+
+from models.api.error import EmptyPatchError
+from models.api.mongo import ObjectIdStr, SelfIdStr
 
 
 class User(BaseModel):
@@ -20,9 +24,9 @@ class UserPatch(BaseModel):
     password: str | None = None
 
     @model_validator(mode="after")
-    def is_non_empty(self):
+    def is_non_empty(self) -> Self:
         if self.name is None and self.email is None and self.password is None:
-            raise ValueError("patch is empty")
+            raise EmptyPatchError
 
         return self
 

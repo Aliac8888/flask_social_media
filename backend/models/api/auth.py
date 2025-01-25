@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
-from models.user import User
-from models.mongo import ObjectIdStr
+
+from models.api.mongo import ObjectIdStr
+from models.api.user import User
 
 
 class AuthRequest(BaseModel):

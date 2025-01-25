@@ -1,9 +1,12 @@
 from os import getenv
+
 from dotenv import load_dotenv
 
 
 def non_falsy[T](value: T | None) -> T:
-    assert value
+    if not value:
+        raise AssertionError
+
     return value
 
 

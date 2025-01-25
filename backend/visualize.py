@@ -1,14 +1,17 @@
 from json import dumps
+from sys import stdout
+
 from db import db
 
-print("digraph U {")
+stdout.write("digraph U {\n")
 
 for i in db.users.find({}):
-    print(
-        f'{dumps(str(i["_id"]))} [label={dumps(f"{i["_id"]}\n{i["name"]}\n{i["email"]}")}];'
-    )
+    name = dumps(str(i["_id"]))
+    label = dumps(f"{i['_id']}\n{i['name']}\n{i['email']}")
+
+    stdout.write(f"{name} [label={label}];\n")
 
     for j in i["followings"]:
-        print(f'{dumps(str(i["_id"]))} -> {dumps(str(j))};')
+        stdout.write(f"{name} -> {dumps(str(j))};\n")
 
-print("}")
+stdout.write("}\n")

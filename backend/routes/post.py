@@ -1,38 +1,48 @@
-from flask_jwt_extended import current_user, jwt_required
-from flask_openapi3.models.tag import Tag
-from flask_openapi3.blueprint import APIBlueprint
-from models.auth import AuthFailed, JwtIdentity
-from models.user import UserId, UserNotFound
-from models.post import *
-from db import db, get_one
-from bson.objectid import ObjectId
 import datetime
 
-# mm
+from bson.objectid import ObjectId
+from flask.typing import ResponseReturnValue
+from flask_jwt_extended import jwt_required
+from flask_openapi3.blueprint import APIBlueprint
+from flask_openapi3.models.tag import Tag
+
+from db import db, get_one
+from models.api.auth import AuthFailed
+from models.api.post import (
+    Post,
+    PostId,
+    PostInit,
+    PostNotFound,
+    PostPatch,
+    PostQuery,
+    PostsList,
+)
+from models.api.user import UserId, UserNotFound
+from plugins import current_user
+
 posts_tag = Tag(name="posts")
 bp = APIBlueprint("post", __name__, url_prefix="/posts")
 
 
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
-def get_posts(query: PostQuery):
-    if query.author_id is None:
-        filter = {}
-    else:
-        filter = {"author": ObjectId(query.author_id)}
+def get_posts(query: PostQuery) -> ResponseReturnValue:
+    post_filter = (
+        {} if query.author_id is None else {"author": ObjectId(query.author_id)}
+    )
 
     posts = db.posts.aggregate(
         [
-            {"$match": filter},
+            {"$match": post_filter},
             {
                 "$lookup": {
                     "from": "users",
                     "localField": "author",
                     "foreignField": "_id",
                     "as": "author",
-                }
+                },
             },
             {"$unwind": {"path": "$author"}},
-        ]
+        ],
     ).to_list()
 
     return PostsList(posts=posts).model_dump()
@@ -42,12 +52,14 @@ def get_posts(query: PostQuery):
     "/feed",
     tags=[posts_tag],
     security=[{"jwt": []}],
-    responses={200: PostsList, 403: AuthFailed, 404: UserNotFound},
+    responses={
+        200: PostsList,
+        403: AuthFailed,
+        404: UserNotFound,
+    },
 )
 @jwt_required()
-def get_feed(query: UserId):
-    assert isinstance(current_user, JwtIdentity)
-
+def get_feed(query: UserId) -> ResponseReturnValue:
     if current_user.user_id != query.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -65,10 +77,10 @@ def get_feed(query: UserId):
                     "localField": "author",
                     "foreignField": "_id",
                     "as": "author",
-                }
+                },
             },
             {"$unwind": {"path": "$author"}},
-        ]
+        ],
     ).to_list()
 
     return PostsList(posts=posts).model_dump()
@@ -81,9 +93,7 @@ def get_feed(query: UserId):
     responses={201: PostId, 403: AuthFailed},
 )
 @jwt_required()
-def create_post(body: PostInit):
-    assert isinstance(current_user, JwtIdentity)
-
+def create_post(body: PostInit) -> ResponseReturnValue:
     if current_user.user_id != body.author and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -95,14 +105,18 @@ def create_post(body: PostInit):
             "creation_time": now,
             "modification_time": now,
             "author": ObjectId(body.author),
-        }
+        },
     )
 
     return PostId(post_id=result.inserted_id).model_dump(), 201
 
 
-@bp.get("/<post_id>", tags=[posts_tag], responses={200: Post, 404: PostNotFound})
-def get_post(path: PostId):
+@bp.get(
+    "/<post_id>",
+    tags=[posts_tag],
+    responses={200: Post, 404: PostNotFound},
+)
+def get_post(path: PostId) -> ResponseReturnValue:
     post = get_one(
         db.posts.aggregate(
             [
@@ -113,11 +127,11 @@ def get_post(path: PostId):
                         "localField": "author",
                         "foreignField": "_id",
                         "as": "author",
-                    }
+                    },
                 },
                 {"$unwind": {"path": "$author"}},
-            ]
-        )
+            ],
+        ),
     )
 
     if post is None:
@@ -133,21 +147,20 @@ def get_post(path: PostId):
     responses={204: None, 404: PostNotFound},
 )
 @jwt_required()
-def update_post(path: PostId, body: PostPatch):
-    assert isinstance(current_user, JwtIdentity)
+def update_post(path: PostId, body: PostPatch) -> ResponseReturnValue:
     now = datetime.datetime.now(datetime.UTC)
-    filter = {"_id": ObjectId(path.post_id)}
+    post_filter = {"_id": ObjectId(path.post_id)}
 
     if not current_user.admin:
-        filter["author"] = ObjectId(current_user.user_id)
+        post_filter["author"] = ObjectId(current_user.user_id)
 
     result = db.posts.update_one(
-        filter,
+        post_filter,
         {
             "$set": {
                 **body.model_dump(exclude_none=True),
                 "modification_time": now,
-            }
+            },
         },
     )
 
@@ -164,14 +177,13 @@ def update_post(path: PostId, body: PostPatch):
     responses={204: None, 404: PostNotFound},
 )
 @jwt_required()
-def delete_post(path: PostId):
-    assert isinstance(current_user, JwtIdentity)
-    filter = {"_id": ObjectId(path.post_id)}
+def delete_post(path: PostId) -> ResponseReturnValue:
+    post_filter = {"_id": ObjectId(path.post_id)}
 
     if not current_user.admin:
-        filter["author"] = ObjectId(current_user.user_id)
+        post_filter["author"] = ObjectId(current_user.user_id)
 
-    result = db.posts.delete_one(filter)
+    result = db.posts.delete_one(post_filter)
 
     if result.deleted_count < 1:
         return PostNotFound().model_dump(), 404

@@ -1,16 +1,20 @@
+import sys
 from collections import defaultdict
+from json import dumps
+from logging import getLogger
 from math import ceil
+from random import randint, random, sample, shuffle
 
-from tqdm import tqdm
-from app import app
-from models.auth import AuthRequest, AuthResponse
-from models.comment import CommentInit
-from models.post import Post, PostId, PostInit
-from models.user import User, UserInit, UsersList
-from random import randint, random, shuffle, sample
-from config import admin_email, admin_pass
 from faker import Faker
-import setup
+from tqdm import tqdm
+
+import setup  # noqa: F401
+from app import app
+from config import admin_email, admin_pass
+from models.api.auth import AuthRequest, AuthResponse
+from models.api.comment import CommentInit
+from models.api.post import PostId, PostInit
+from models.api.user import User, UserInit, UsersList
 
 USERS_MIN = 500
 USERS_MAX = 1000
@@ -26,13 +30,15 @@ POST_NO_COMMENT_ODDS = 0.5
 POST_MIN_COMMENTS = 1
 POST_MAX_COMMENTS = 10
 
+logger = getLogger(__name__)
 
-def randint_norm(l: int, h: int):
-    values = [randint(l, h) for _ in range(NORMAL_APPROX_COUNT)]
+
+def randint_norm(min_value: int, max_value: int) -> int:
+    values = [randint(min_value, max_value) for _ in range(NORMAL_APPROX_COUNT)]  # noqa: S311
     return round(sum(values) / NORMAL_APPROX_COUNT)
 
 
-def index_to_pos(index: int, dims: list[int]):
+def index_to_pos(index: int, dims: list[int]) -> tuple[int, ...]:
     pos: list[int] = []
 
     for i in dims[:-1]:
@@ -44,7 +50,7 @@ def index_to_pos(index: int, dims: list[int]):
     return tuple(pos)
 
 
-def get_user_dims(users: list[User]):
+def get_user_dims(users: list[User]) -> list[int]:
     while True:
         dims: list[int] = []
         length = len(users)
@@ -64,13 +70,13 @@ def get_user_dims(users: list[User]):
         dims.append(length)
 
         if len(dims) < USER_GRID_DIMS:
-            print("Too few user grid dimensions. Retrying….", dims)
+            logger.warning("Too few user grid dimensions (%s). Retrying….", dumps(dims))
         else:
-            print("User grid dimensions are", dims)
+            logger.info("User grid dimensions are %s.", dumps(dims))
             return dims
 
 
-def generate_social_graph(users: list[User]):
+def generate_social_graph(users: list[User]) -> defaultdict[str, set[str]]:
     dims = get_user_dims(users)
     pos_of_obj = {v.id: index_to_pos(k, dims) for k, v in enumerate(users)}
     obj_of_pos = {v: k for k, v in pos_of_obj.items()}
@@ -86,7 +92,7 @@ def generate_social_graph(users: list[User]):
             if following is None:
                 continue
 
-            luck = random()
+            luck = random()  # noqa: S311
 
             if luck < ONE_WAY_FOLLOW_ODDS:
                 followings[follower.id].add(following)
@@ -100,7 +106,7 @@ def generate_social_graph(users: list[User]):
 faker = Faker()
 
 with app.test_client() as c:
-    print("Authenticating….")
+    logger.info("Authenticating….")
 
     jwt = AuthResponse.model_validate(
         c.post(
@@ -109,12 +115,12 @@ with app.test_client() as c:
                 email=admin_email,
                 password=admin_pass,
             ).model_dump(),
-        ).json
+        ).json,
     ).jwt
 
-    print("Creating users….")
+    logger.info("Creating users….")
 
-    for _ in tqdm(range(randint(USERS_MIN, USERS_MAX))):
+    for _ in tqdm(range(randint(USERS_MIN, USERS_MAX))):  # noqa: S311
         first = faker.first_name()
         last = faker.last_name()
 
@@ -127,15 +133,19 @@ with app.test_client() as c:
             ).model_dump(),
         )
 
-    print("Retrieving user list….")
+    logger.info("Retrieving user list….")
     users = UsersList.model_validate(c.get("/users/").json).users
-    assert users
+
+    if not users:
+        logger.critical("There were no users, somehow.")
+        sys.exit(1)
+
     shuffle(users)
 
-    print("Generating social graph….")
+    logger.info("Generating social graph….")
     followings = generate_social_graph(users)
 
-    print("Following users….")
+    logger.info("Following users….")
     for follower_id, followables in tqdm(followings.items()):
         for following_id in followables:
             result = c.put(
@@ -143,7 +153,7 @@ with app.test_client() as c:
                 headers={"Authorization": f"Bearer {jwt}"},
             )
 
-    print("Finding isolated users….")
+    logger.info("Finding isolated users….")
     isolated_users = {i.id for i in users}
 
     for follower in users:
@@ -156,7 +166,7 @@ with app.test_client() as c:
 
     users_to_remove = list(isolated_users)
     shuffle(users_to_remove)
-    print("Found", len(users_to_remove), "isolated users. Deleting excess….")
+    logger.info("Found %d isolated users. Deleting excess….", len(users_to_remove))
 
     for user in tqdm(users_to_remove[USERS_MAX_ISOLATED:]):
         c.delete(
@@ -164,14 +174,18 @@ with app.test_client() as c:
             headers={"Authorization": f"Bearer {jwt}"},
         )
 
-    print("Retrieving user list… (again).")
+    logger.info("Retrieving user list… (again).")
     users = UsersList.model_validate(c.get("/users/").json).users
-    assert users
+
+    if not users:
+        logger.critical("There were no users, somehow.")
+        sys.exit(1)
+
     shuffle(users)
 
-    print("Creating posts and comments….")
+    logger.info("Creating posts and comments….")
     for post_author in tqdm(users):
-        if random() < USER_NO_POST_ODDS:
+        if random() < USER_NO_POST_ODDS:  # noqa: S311
             continue
 
         for _ in range(randint_norm(USER_MIN_POSTS, USER_MAX_POSTS)):
@@ -180,16 +194,18 @@ with app.test_client() as c:
                     "/posts/",
                     headers={"Authorization": f"Bearer {jwt}"},
                     json=PostInit(
-                        author=post_author.id, content=faker.text()
+                        author=post_author.id,
+                        content=faker.text(),
                     ).model_dump(),
-                ).json
+                ).json,
             ).post_id
 
-            if random() < POST_NO_COMMENT_ODDS:
+            if random() < POST_NO_COMMENT_ODDS:  # noqa: S311
                 continue
 
             for comment_author in sample(
-                users, randint_norm(POST_MIN_COMMENTS, POST_MAX_COMMENTS)
+                users,
+                randint_norm(POST_MIN_COMMENTS, POST_MAX_COMMENTS),
             ):
                 c.post(
                     "/comments/",
