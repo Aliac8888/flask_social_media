@@ -45,10 +45,12 @@ class Following(BaseModel):
 
 
 class UserNotFound(BaseModel):
+    type: str = "UserNotFound"
     message: str = "User not found"
 
 
 class UserExists(BaseModel):
+    type: str = "UserExists"
     message: str = "User already exists"
 
 

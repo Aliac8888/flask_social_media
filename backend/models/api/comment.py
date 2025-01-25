@@ -29,6 +29,7 @@ class CommentId(BaseModel):
 
 
 class CommentNotFound(BaseModel):
+    type: str = "CommentNotFound"
     message: str = "Comment not found"
 
 

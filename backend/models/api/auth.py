@@ -15,6 +15,7 @@ class AuthResponse(BaseModel):
 
 
 class AuthFailed(BaseModel):
+    type: str = "AuthFailed"
     message: str = "Authentication failed"
 
 

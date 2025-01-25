@@ -31,6 +31,7 @@ class PostId(BaseModel):
 
 
 class PostNotFound(BaseModel):
+    type: str = "PostNotFound"
     message: str = "Post not found"
 
 
