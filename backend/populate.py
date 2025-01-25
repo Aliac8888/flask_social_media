@@ -8,13 +8,12 @@ from random import randint, random, sample, shuffle
 from faker import Faker
 from tqdm import tqdm
 
-import setup  # noqa: F401
-from app import app
 from config import admin_email, admin_pass
 from models.api.auth import AuthRequest, AuthResponse
 from models.api.comment import CommentInit
 from models.api.post import PostId, PostInit
 from models.api.user import User, UserInit, UsersList
+from setup import app
 
 USERS_MIN = 500
 USERS_MAX = 1000

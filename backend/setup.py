@@ -3,7 +3,7 @@ from logging import getLogger
 
 from pymongo.errors import OperationFailure
 
-from app import app
+from app import create_app
 from config import (
     admin_email,
     admin_pass,
@@ -57,6 +57,8 @@ client.admin.command(
 )
 
 db.users.create_index("email", unique=True)
+
+app = create_app()
 
 with app.test_client() as c:
     c.post(
