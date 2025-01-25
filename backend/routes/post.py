@@ -24,7 +24,7 @@ bp = APIBlueprint("post", __name__, url_prefix="/posts")
 
 
 @bp.get("/", tags=[posts_tag], responses={200: PostsList})
-def get_posts(query: PostQuery):  # noqa: ANN201
+def handle_posts_get(query: PostQuery):  # noqa: ANN201
     post_filter = (
         {} if query.author_id is None else {"author": ObjectId(query.author_id)}
     )
@@ -58,7 +58,7 @@ def get_posts(query: PostQuery):  # noqa: ANN201
     },
 )
 @jwt_required()
-def get_feed(query: UserId):  # noqa: ANN201
+def handle_posts_feed_get(query: UserId):  # noqa: ANN201
     if current_user.user_id != query.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -92,7 +92,7 @@ def get_feed(query: UserId):  # noqa: ANN201
     responses={201: PostId, 403: AuthFailed},
 )
 @jwt_required()
-def create_post(body: PostInit):  # noqa: ANN201
+def handle_posts_post(body: PostInit):  # noqa: ANN201
     if current_user.user_id != body.author and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -115,7 +115,7 @@ def create_post(body: PostInit):  # noqa: ANN201
     tags=[posts_tag],
     responses={200: Post, 404: PostNotFound},
 )
-def get_post(path: PostId):  # noqa: ANN201
+def handle_posts_id_get(path: PostId):  # noqa: ANN201
     post = get_one(
         db.posts.aggregate(
             [
@@ -146,7 +146,7 @@ def get_post(path: PostId):  # noqa: ANN201
     responses={204: None, 404: PostNotFound},
 )
 @jwt_required()
-def update_post(path: PostId, body: PostPatch):  # noqa: ANN201
+def handle_posts_id_patch(path: PostId, body: PostPatch):  # noqa: ANN201
     now = datetime.datetime.now(datetime.UTC)
     post_filter = {"_id": ObjectId(path.post_id)}
 
@@ -176,7 +176,7 @@ def update_post(path: PostId, body: PostPatch):  # noqa: ANN201
     responses={204: None, 404: PostNotFound},
 )
 @jwt_required()
-def delete_post(path: PostId):  # noqa: ANN201
+def handle_posts_id_delete(path: PostId):  # noqa: ANN201
     post_filter = {"_id": ObjectId(path.post_id)}
 
     if not current_user.admin:
