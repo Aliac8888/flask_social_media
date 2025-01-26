@@ -2,8 +2,20 @@ from bson.objectid import ObjectId
 from flask_jwt_extended import create_access_token, jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
-from pymongo.errors import OperationFailure
 
+from controllers.user import (
+    create_user,
+    delete_user,
+    follow_user,
+    get_all_users,
+    get_user_by_email,
+    get_user_by_id,
+    get_user_followers,
+    get_user_followings,
+    unfollow_user,
+    update_user,
+)
+from models import model_convert
 from models.api.auth import AuthFailed, AuthRequest, AuthResponse
 from models.api.user import (
     Following,
@@ -16,8 +28,8 @@ from models.api.user import (
     UsersList,
     UsersQuery,
 )
+from models.database.user import DbUserExistsError, DbUserNotFoundError
 from server.config import admin_email, maintenance
-from server.db import DUPLICATE_KEY, db
 from server.plugins import bcrypt, current_user
 
 users_tag = Tag(name="users")
@@ -28,14 +40,13 @@ bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 @bp.get("/", tags=[users_tag, followings_tag], responses={200: UsersList})
 def handle_users_get(query: UsersQuery):  # noqa: ANN201
-    if query.following_id is None:
-        users = db.users.find({}).to_list()
-    else:
-        users = db.users.find(
-            {"followings": ObjectId(query.following_id)},
-        ).to_list()
+    users = (
+        get_all_users()
+        if query.following_id is None
+        else get_user_followers(ObjectId(query.following_id))
+    )
 
-    return UsersList(users).model_dump()
+    return model_convert(UsersList, users).model_dump()
 
 
 @bp.post(
@@ -56,25 +67,19 @@ def handle_users_post(body: UserInit):  # noqa: ANN201
 
     credential = bcrypt.generate_password_hash(body.password) if body.password else b""
 
-    user = {
-        "name": body.name,
-        "email": body.email,
-        "credential": credential,
-        "followings": [],
-    }
-
     try:
-        result = db.users.insert_one(user)
-    except OperationFailure as e:
-        if e.code == DUPLICATE_KEY:
-            return UserExists().model_dump(), 409
+        user = create_user(
+            name=body.name,
+            email=body.email,
+            credential=credential,
+        )
+    except DbUserExistsError:
+        return UserExists().model_dump(), 409
 
-        raise
-
-    user["_id"] = result.inserted_id
+    user = model_convert(User, user)
 
     return AuthResponse(
-        user=User.model_validate(user),
+        user=user,
         jwt=create_access_token(user),
     ).model_dump()
 
@@ -85,21 +90,26 @@ def handle_users_post(body: UserInit):  # noqa: ANN201
     responses={200: AuthResponse, 403: AuthFailed},
 )
 def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
-    user = db.users.find_one({"email": body.email})
-
-    if user is None:
+    try:
+        user = get_user_by_email(body.email)
+    except DbUserNotFoundError:
         return AuthFailed().model_dump(), 403
 
-    if not user["credential"] and not maintenance:
+    if not user.credential and not maintenance:
         return AuthFailed().model_dump(), 403
 
-    if user["credential"] and not bcrypt.check_password_hash(
-        user["credential"],
+    if user.credential and not bcrypt.check_password_hash(
+        user.credential,
         body.password,
     ):
         return AuthFailed().model_dump(), 403
 
-    return AuthResponse(user=user, jwt=create_access_token(user)).model_dump()
+    user = model_convert(User, user)
+
+    return AuthResponse(
+        user=user,
+        jwt=create_access_token(user),
+    ).model_dump()
 
 
 @bp.get(
@@ -111,12 +121,12 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
     },
 )
 def handle_users_id_get(path: UserId):  # noqa: ANN201
-    i = db.users.find_one({"_id": ObjectId(path.user_id)})
-
-    if i is None:
+    try:
+        user = get_user_by_id(ObjectId(path.user_id))
+    except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
-    return User.model_validate(i).model_dump()
+    return model_convert(User, user).model_dump()
 
 
 @bp.patch(
@@ -135,36 +145,27 @@ def handle_users_id_patch(path: UserId, body: UserPatch):  # noqa: ANN201
     if current_user.user_id != path.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
-    patch = body.model_dump(exclude_none=True)
+    credential = None
 
-    if "password" in patch:
-        if not patch["password"] and not maintenance:
+    if body.password is not None:
+        if not body.password and not maintenance:
             return AuthFailed().model_dump(), 403
 
-        patch["credential"] = (
-            bcrypt.generate_password_hash(patch["password"])
-            if patch["password"]
-            else b""
+        credential = (
+            bcrypt.generate_password_hash(body.password) if body.password else b""
         )
-
-        del patch["password"]
 
     try:
-        result = db.users.update_one(
-            {
-                "_id": ObjectId(path.user_id),
-                "email": {"$ne": {"$literal": admin_email}},
-            },
-            {"$set": patch},
+        update_user(
+            ObjectId(path.user_id),
+            name=body.name,
+            email=body.email,
+            credential=credential,
         )
-    except OperationFailure as e:
-        if e.code == DUPLICATE_KEY:
-            return UserExists().model_dump(), 409
-
-        raise
-
-    if result.matched_count < 1:
+    except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
+    except DbUserExistsError:
+        return UserExists().model_dump(), 409
 
     return "", 204
 
@@ -180,28 +181,10 @@ def handle_users_id_delete(path: UserId):  # noqa: ANN201
     if current_user.user_id != path.user_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
-    result = db.users.delete_one(
-        {"_id": ObjectId(path.user_id), "email": {"$ne": {"$literal": admin_email}}},
-    )
-
-    if result.deleted_count < 1:
+    try:
+        delete_user(ObjectId(path.user_id))
+    except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
-
-    db.users.update_many(
-        {"followings": ObjectId(path.user_id)},
-        {"$pull": {"followings": ObjectId(path.user_id)}},
-    )
-
-    posts = db.posts.find(
-        {"author": ObjectId(path.user_id)},
-        {"_id": 1},
-    ).to_list()
-
-    if posts:
-        db.comments.delete_many({"post": {"$in": [i["_id"] for i in posts]}})
-
-    db.posts.delete_many({"author": ObjectId(path.user_id)})
-    db.comments.delete_many({"author": ObjectId(path.user_id)})
 
     return "", 204
 
@@ -212,14 +195,12 @@ def handle_users_id_delete(path: UserId):  # noqa: ANN201
     responses={200: UsersList, 404: UserNotFound},
 )
 def handle_users_id_followings_get(path: UserId):  # noqa: ANN201
-    follower = db.users.find_one({"_id": ObjectId(path.user_id)})
-
-    if follower is None:
+    try:
+        followings = get_user_followings(ObjectId(path.user_id))
+    except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
-    followings = db.users.find({"_id": {"$in": follower["followings"]}}).to_list()
-
-    return UsersList(followings).model_dump()
+    return model_convert(UsersList, followings).model_dump()
 
 
 @bp.put(
@@ -233,17 +214,9 @@ def handle_users_id_followings_id_put(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
-    following = db.users.find_one({"_id": ObjectId(path.following_id)})
-
-    if following is None:
-        return UserNotFound().model_dump(), 404
-
-    result = db.users.update_one(
-        {"_id": ObjectId(path.follower_id)},
-        {"$addToSet": {"followings": ObjectId(path.following_id)}},
-    )
-
-    if result.matched_count < 1:
+    try:
+        follow_user(ObjectId(path.follower_id), ObjectId(path.following_id))
+    except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
     return "", 204
@@ -260,17 +233,9 @@ def handle_users_id_followings_id_delete(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
-    following = db.users.find_one({"_id": ObjectId(path.following_id)})
-
-    if following is None:
-        return UserNotFound().model_dump(), 404
-
-    result = db.users.update_one(
-        {"_id": ObjectId(path.follower_id)},
-        {"$pull": {"followings": ObjectId(path.following_id)}},
-    )
-
-    if result.matched_count < 1:
+    try:
+        unfollow_user(ObjectId(path.follower_id), ObjectId(path.following_id))
+    except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
     return "", 204

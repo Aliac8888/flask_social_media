@@ -1,10 +1,17 @@
-import datetime
-
 from bson.objectid import ObjectId
 from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
+from pydantic import RootModel
 
+from controllers.comment import (
+    create_comment,
+    delete_comment,
+    get_comment_by_id,
+    get_comments_of_post,
+    update_comment,
+)
+from models import model_convert
 from models.api.auth import AuthFailed
 from models.api.comment import (
     Comment,
@@ -14,8 +21,11 @@ from models.api.comment import (
     CommentPatch,
     CommentsList,
 )
-from models.api.post import PostId
-from server.db import db, get_one
+from models.api.post import PostId, PostNotFound
+from models.api.user import UserNotFound
+from models.database.comments import DbCommentNotFoundError
+from models.database.post import DbPostNotFoundError
+from models.database.user import DbUserNotFoundError
 from server.plugins import current_user
 
 comments_tag = Tag(name="comments")
@@ -24,48 +34,38 @@ bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 
 @bp.get("/", tags=[comments_tag], responses={200: CommentsList})
 def handle_comments_get(query: PostId):  # noqa: ANN201
-    comments = db.comments.aggregate(
-        [
-            {"$match": {"post": ObjectId(query.post_id)}},
-            {
-                "$lookup": {
-                    "from": "users",
-                    "localField": "author",
-                    "foreignField": "_id",
-                    "as": "author",
-                },
-            },
-            {"$unwind": {"path": "$author"}},
-        ],
-    ).to_list()
+    comments = get_comments_of_post(ObjectId(query.post_id))
 
-    return CommentsList(comments).model_dump()
+    return model_convert(CommentsList, comments).model_dump()
 
 
 @bp.post(
     "/",
     tags=[comments_tag],
     security=[{"jwt": []}],
-    responses={201: CommentId, 403: AuthFailed},
+    responses={
+        201: CommentId,
+        403: AuthFailed,
+        404: RootModel[UserNotFound | PostNotFound],
+    },
 )
 @jwt_required()
 def handle_comments_post(body: CommentInit):  # noqa: ANN201
     if current_user.user_id != body.author and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
-    now = datetime.datetime.now(datetime.UTC)
+    try:
+        comment = create_comment(
+            content=body.content,
+            author_id=ObjectId(body.author),
+            post_id=ObjectId(body.post),
+        )
+    except DbUserNotFoundError:
+        return UserNotFound().model_dump(), 404
+    except DbPostNotFoundError:
+        return PostNotFound().model_dump(), 404
 
-    result = db.comments.insert_one(
-        {
-            "content": body.content,
-            "author": ObjectId(body.author),
-            "post": ObjectId(body.post),
-            "creation_time": now,
-            "modification_time": now,
-        },
-    )
-
-    return CommentId(comment_id=result.inserted_id).model_dump(), 201
+    return model_convert(Comment, comment).model_dump(), 201
 
 
 @bp.get(
@@ -74,27 +74,12 @@ def handle_comments_post(body: CommentInit):  # noqa: ANN201
     responses={200: Comment, 404: CommentNotFound},
 )
 def handle_comments_id_get(path: CommentId):  # noqa: ANN201
-    i = get_one(
-        db.comments.aggregate(
-            [
-                {"$match": {"_id": ObjectId(path.comment_id)}},
-                {
-                    "$lookup": {
-                        "from": "users",
-                        "localField": "author",
-                        "foreignField": "_id",
-                        "as": "author",
-                    },
-                },
-                {"$unwind": {"path": "$author"}},
-            ],
-        ),
-    )
-
-    if i is None:
+    try:
+        comment = get_comment_by_id(ObjectId(path.comment_id))
+    except DbCommentNotFoundError:
         return CommentNotFound().model_dump(), 404
 
-    return Comment.model_validate(i).model_dump()
+    return model_convert(Comment, comment).model_dump()
 
 
 @bp.patch(
@@ -105,23 +90,13 @@ def handle_comments_id_get(path: CommentId):  # noqa: ANN201
 )
 @jwt_required()
 def handle_comments_id_patch(path: CommentId, body: CommentPatch):  # noqa: ANN201
-    now = datetime.datetime.now(datetime.UTC)
-    comment_filter = {"_id": ObjectId(path.comment_id)}
-
-    if not current_user.admin:
-        comment_filter["author"] = ObjectId(current_user.user_id)
-
-    result = db.comments.update_one(
-        comment_filter,
-        {
-            "$set": {
-                **body.model_dump(exclude_none=True),
-                "modification_time": now,
-            },
-        },
-    )
-
-    if result.matched_count < 1:
+    try:
+        update_comment(
+            ObjectId(path.comment_id),
+            body.content,
+            None if current_user.admin else ObjectId(current_user.user_id),
+        )
+    except DbCommentNotFoundError:
         return CommentNotFound().model_dump(), 404
 
     return "", 204
@@ -135,14 +110,12 @@ def handle_comments_id_patch(path: CommentId, body: CommentPatch):  # noqa: ANN2
 )
 @jwt_required()
 def handle_comments_id_delete(path: CommentId):  # noqa: ANN201
-    comment_filter = {"_id": ObjectId(path.comment_id)}
-
-    if not current_user.admin:
-        comment_filter["author"] = ObjectId(current_user.user_id)
-
-    result = db.comments.delete_one(comment_filter)
-
-    if result.deleted_count < 1:
+    try:
+        delete_comment(
+            ObjectId(path.comment_id),
+            None if current_user.admin else ObjectId(current_user.user_id),
+        )
+    except DbCommentNotFoundError:
         return CommentNotFound().model_dump(), 404
 
     return "", 204
