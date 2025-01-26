@@ -17,6 +17,6 @@ execv(
         "-b",
         f"{be_host}:{be_port}",
         *argv[1:],
-        "server:create_app()",
+        "server:app",
     ],
 )
