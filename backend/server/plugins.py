@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager, get_current_user
 from werkzeug.local import LocalProxy
 
 from models.api.auth import JwtIdentity
+from models.api.user import User
 from server.config import admin_email, fe_url
 
 bcrypt = Bcrypt()
@@ -14,10 +15,10 @@ jwt = JWTManager()
 
 
 @jwt.user_identity_loader
-def user_identity(user: dict[str, Any]) -> str:
+def user_identity(user: User) -> str:
     return JwtIdentity(
-        user_id=user["_id"],
-        admin=user["email"] == admin_email,
+        user_id=user.id,
+        admin=user.email == admin_email,
     ).model_dump_json()
 
 
