@@ -1,17 +1,17 @@
 from json import dumps
 from sys import stdout
 
-from server.db import db
+from controllers.user import get_all_users
 
 stdout.write("digraph U {\n")
 
-for i in db.users.find({}):
-    name = dumps(str(i["_id"]))
-    label = dumps(f"{i['_id']}\n{i['name']}\n{i['email']}")
+for i in get_all_users().root:
+    name = dumps(str(i.id))
+    label = dumps(f"{i.id}\n{i.name}\n{i.email}")
 
     stdout.write(f"{name} [label={label}];\n")
 
-    for j in i["followings"]:
+    for j in i.followings:
         stdout.write(f"{name} -> {dumps(str(j))};\n")
 
 stdout.write("}\n")

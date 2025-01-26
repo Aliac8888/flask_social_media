@@ -2,12 +2,11 @@ from flask_jwt_extended import create_access_token, jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
+from controllers.auth import login, signup
 from controllers.user import (
-    create_user,
     delete_user,
     follow_user,
     get_all_users,
-    get_user_by_email,
     get_user_by_id,
     get_user_followers,
     get_user_followings,
@@ -27,6 +26,7 @@ from models.api.user import (
     UsersList,
     UsersQuery,
 )
+from models.db.auth import AuthFailedError
 from models.db.user import DbUserExistsError, DbUserNotFoundError
 from server.config import admin_email, maintenance
 from server.plugins import bcrypt, current_user
@@ -64,13 +64,11 @@ def handle_users_post(body: UserInit):  # noqa: ANN201
     if not body.password and not maintenance:
         return AuthFailed().model_dump(), 403
 
-    credential = bcrypt.generate_password_hash(body.password) if body.password else b""
-
     try:
-        user = create_user(
+        user = signup(
             name=body.name,
             email=body.email,
-            credential=credential,
+            password=body.password,
         )
     except DbUserExistsError:
         return UserExists().model_dump(), 409
@@ -89,18 +87,12 @@ def handle_users_post(body: UserInit):  # noqa: ANN201
     responses={200: AuthResponse, 403: AuthFailed},
 )
 def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
+    if not body.password and not maintenance:
+        return AuthFailed().model_dump(), 403
+
     try:
-        user = get_user_by_email(body.email)
-    except DbUserNotFoundError:
-        return AuthFailed().model_dump(), 403
-
-    if not user.credential and not maintenance:
-        return AuthFailed().model_dump(), 403
-
-    if user.credential and not bcrypt.check_password_hash(
-        user.credential,
-        body.password,
-    ):
+        user = login(body.email, body.password)
+    except (DbUserNotFoundError, AuthFailedError):
         return AuthFailed().model_dump(), 403
 
     user = model_convert(User, user)

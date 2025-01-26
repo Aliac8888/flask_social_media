@@ -1,5 +1,6 @@
 import sys
 from collections import defaultdict
+from contextlib import suppress
 from json import dumps
 from logging import getLogger
 from math import ceil
@@ -7,14 +8,14 @@ from random import randint, random, sample, shuffle
 
 from bson.objectid import ObjectId
 from faker import Faker
-from setup import app
 from tqdm import tqdm
 
-from models.api.auth import AuthRequest, AuthResponse
-from models.api.comment import CommentInit
-from models.api.post import PostId, PostInit
-from models.api.user import User, UserInit, UsersList
-from server.config import admin_email, admin_pass
+from controllers.auth import signup
+from controllers.comment import create_comment
+from controllers.post import create_post
+from controllers.user import delete_user, follow_user, get_all_users
+from models.db.user import DbUser, DbUserExistsError, DbUserNotFoundError
+from tasks.setup import setup
 
 USERS_MIN = 500
 USERS_MAX = 1000
@@ -50,7 +51,7 @@ def index_to_pos(index: int, dims: list[int]) -> tuple[int, ...]:
     return tuple(pos)
 
 
-def get_user_dims(users: list[User]) -> list[int]:
+def get_user_dims(users: list[DbUser]) -> list[int]:
     while True:
         dims: list[int] = []
         length = len(users)
@@ -76,7 +77,7 @@ def get_user_dims(users: list[User]) -> list[int]:
             return dims
 
 
-def generate_social_graph(users: list[User]) -> defaultdict[ObjectId, set[ObjectId]]:
+def generate_social_graph(users: list[DbUser]) -> defaultdict[ObjectId, set[ObjectId]]:
     dims = get_user_dims(users)
     pos_of_obj = {v.id: index_to_pos(k, dims) for k, v in enumerate(users)}
     obj_of_pos = {v: k for k, v in pos_of_obj.items()}
@@ -103,20 +104,10 @@ def generate_social_graph(users: list[User]) -> defaultdict[ObjectId, set[Object
     return followings
 
 
-faker = Faker()
+def populate() -> None:  # noqa: C901, PLR0912
+    setup()
 
-with app.test_client() as c:
-    logger.info("Authenticating….")
-
-    jwt = AuthResponse.model_validate(
-        c.post(
-            "/users/login",
-            json=AuthRequest(
-                email=admin_email,
-                password=admin_pass,
-            ).model_dump(),
-        ).json,
-    ).jwt
+    faker = Faker()
 
     logger.info("Creating users….")
 
@@ -124,17 +115,15 @@ with app.test_client() as c:
         first = faker.first_name()
         last = faker.last_name()
 
-        result = c.post(
-            "/users/",
-            json=UserInit(
+        with suppress(DbUserExistsError):
+            signup(
                 name=f"{first} {last}",
                 email=f"{first}.{last}@example.com".lower(),
                 password="",
-            ).model_dump(),
-        )
+            )
 
     logger.info("Retrieving user list….")
-    users = UsersList.model_validate(c.get("/users/").json).root
+    users = get_all_users().root
 
     if not users:
         logger.critical("There were no users, somehow.")
@@ -148,10 +137,7 @@ with app.test_client() as c:
     logger.info("Following users….")
     for follower_id, followables in tqdm(followings.items()):
         for following_id in followables:
-            result = c.put(
-                f"/users/{follower_id}/followings/{following_id}",
-                headers={"Authorization": f"Bearer {jwt}"},
-            )
+            follow_user(follower_id, following_id)
 
     logger.info("Finding isolated users….")
     isolated_users = {i.id for i in users}
@@ -168,14 +154,12 @@ with app.test_client() as c:
     shuffle(users_to_remove)
     logger.info("Found %d isolated users. Deleting excess….", len(users_to_remove))
 
-    for user in tqdm(users_to_remove[USERS_MAX_ISOLATED:]):
-        c.delete(
-            f"/users/{user}",
-            headers={"Authorization": f"Bearer {jwt}"},
-        )
+    for user_id in tqdm(users_to_remove[USERS_MAX_ISOLATED:]):
+        with suppress(DbUserNotFoundError):
+            delete_user(user_id)
 
     logger.info("Retrieving user list… (again).")
-    users = UsersList.model_validate(c.get("/users/").json).root
+    users = get_all_users().root
 
     if not users:
         logger.critical("There were no users, somehow.")
@@ -189,16 +173,10 @@ with app.test_client() as c:
             continue
 
         for _ in range(randint_norm(USER_MIN_POSTS, USER_MAX_POSTS)):
-            post_id = PostId.model_validate(
-                c.post(
-                    "/posts/",
-                    headers={"Authorization": f"Bearer {jwt}"},
-                    json=PostInit(
-                        author=post_author.id,
-                        content=faker.text(),
-                    ).model_dump(),
-                ).json,
-            ).post_id
+            post_id = create_post(
+                author_id=post_author.id,
+                content=faker.text(),
+            ).id
 
             if random() < POST_NO_COMMENT_ODDS:  # noqa: S311
                 continue
@@ -207,12 +185,12 @@ with app.test_client() as c:
                 users,
                 randint_norm(POST_MIN_COMMENTS, POST_MAX_COMMENTS),
             ):
-                c.post(
-                    "/comments/",
-                    headers={"Authorization": f"Bearer {jwt}"},
-                    json=CommentInit(
-                        author=comment_author.id,
-                        post=post_id,
-                        content=faker.text(),
-                    ).model_dump(),
+                create_comment(
+                    author_id=comment_author.id,
+                    post_id=post_id,
+                    content=faker.text(),
                 )
+
+
+if __name__ == "__main__":
+    populate()
