@@ -2,8 +2,6 @@ from datetime import UTC, datetime
 
 from bson.objectid import ObjectId
 
-from controllers.post import validate_post_id
-from controllers.user import get_user_by_id
 from models.db.comments import DbComment, DbCommentList, DbCommentNotFoundError
 from server.db import db, get_one
 
@@ -59,6 +57,9 @@ def get_comments_of_post(post_id: ObjectId) -> DbCommentList:
 
 
 def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbComment:
+    from controllers.post import validate_post_id
+    from controllers.user import get_user_by_id
+
     now = datetime.now(UTC)
     author = get_user_by_id(author_id)
     validate_post_id(post_id)

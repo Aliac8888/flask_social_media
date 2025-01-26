@@ -2,8 +2,6 @@ from bson.objectid import ObjectId
 from pydantic import validate_email
 from pymongo.errors import OperationFailure
 
-from controllers.comment import delete_comments_by_author
-from controllers.post import delete_posts_by_author
 from models.db.user import (
     DbUser,
     DbUserExistsError,
@@ -125,6 +123,9 @@ def update_user(
 
 
 def delete_user(user_id: ObjectId) -> None:
+    from controllers.comment import delete_comments_by_author
+    from controllers.post import delete_posts_by_author
+
     result = db.users.delete_one(
         {"_id": user_id, "email": {"$ne": {"$literal": admin_email}}},
     )

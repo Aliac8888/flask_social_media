@@ -2,11 +2,6 @@ from datetime import UTC, datetime
 
 from bson.objectid import ObjectId
 
-from controllers.comment import (
-    delete_comments_of_many_posts,
-    delete_comments_of_post,
-)
-from controllers.user import get_user_by_id
 from models.db.post import DbPost, DbPostList, DbPostNotFoundError
 from server.db import db, get_one
 
@@ -80,6 +75,8 @@ def get_posts_by_author(author_id: ObjectId) -> DbPostList:
 
 
 def get_post_feed(user_id: ObjectId) -> DbPostList:
+    from controllers.user import get_user_by_id
+
     user = get_user_by_id(user_id)
 
     result = db.posts.aggregate(
@@ -104,6 +101,8 @@ def create_post(
     content: str,
     author_id: ObjectId,
 ) -> DbPost:
+    from controllers.user import get_user_by_id
+
     now = datetime.now(UTC)
     user = get_user_by_id(author_id)
 
@@ -148,6 +147,8 @@ def update_post(
 
 
 def delete_post(post_id: ObjectId, author_id: ObjectId | None = None) -> None:
+    from controllers.comment import delete_comments_of_post
+
     post_filter = {"_id": post_id}
 
     if author_id is not None:
@@ -162,6 +163,8 @@ def delete_post(post_id: ObjectId, author_id: ObjectId | None = None) -> None:
 
 
 def delete_posts_by_author(author_id: ObjectId) -> bool:
+    from controllers.comment import delete_comments_of_many_posts
+
     posts = db.posts.find({"author": author_id}, {"_id": 1}).to_list()
 
     delete_comments_of_many_posts([i["_id"] for i in posts])
