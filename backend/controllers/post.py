@@ -7,7 +7,7 @@ from controllers.comment import (
     delete_comments_of_post,
 )
 from controllers.user import get_user_by_id
-from models.database.post import DbPost, DbPostList, DbPostNotFoundError
+from models.db.post import DbPost, DbPostList, DbPostNotFoundError
 from server.db import db, get_one
 
 

@@ -28,7 +28,7 @@ from models.api.user import (
     UsersList,
     UsersQuery,
 )
-from models.database.user import DbUserExistsError, DbUserNotFoundError
+from models.db.user import DbUserExistsError, DbUserNotFoundError
 from server.config import admin_email, maintenance
 from server.plugins import bcrypt, current_user
 

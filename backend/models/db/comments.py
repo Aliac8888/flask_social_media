@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, RootModel
 
-from models.database.mongo import ObjectIdRaw, SelfIdRaw
+from models.db.mongo import ObjectIdRaw, SelfIdRaw
 
 
 class DbComment(BaseModel):

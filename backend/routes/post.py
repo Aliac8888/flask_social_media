@@ -24,8 +24,8 @@ from models.api.post import (
     PostsList,
 )
 from models.api.user import UserId, UserNotFound
-from models.database.post import DbPostNotFoundError
-from models.database.user import DbUserNotFoundError
+from models.db.post import DbPostNotFoundError
+from models.db.user import DbUserNotFoundError
 from server.plugins import current_user
 
 posts_tag = Tag(name="posts")

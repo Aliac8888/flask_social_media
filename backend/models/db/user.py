@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, RootModel
 
-from models.database.mongo import ObjectIdRaw, SelfIdRaw
+from models.db.mongo import ObjectIdRaw, SelfIdRaw
 
 
 class DbUser(BaseModel):

@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 
 from controllers.post import validate_post_id
 from controllers.user import get_user_by_id
-from models.database.comments import DbComment, DbCommentList, DbCommentNotFoundError
+from models.db.comments import DbComment, DbCommentList, DbCommentNotFoundError
 from server.db import db, get_one
 
 

@@ -4,7 +4,7 @@ from pymongo.errors import OperationFailure
 
 from controllers.comment import delete_comments_by_author
 from controllers.post import delete_posts_by_author
-from models.database.user import (
+from models.db.user import (
     DbUser,
     DbUserExistsError,
     DbUserList,

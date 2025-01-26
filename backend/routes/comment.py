@@ -23,9 +23,9 @@ from models.api.comment import (
 )
 from models.api.post import PostId, PostNotFound
 from models.api.user import UserNotFound
-from models.database.comments import DbCommentNotFoundError
-from models.database.post import DbPostNotFoundError
-from models.database.user import DbUserNotFoundError
+from models.db.comments import DbCommentNotFoundError
+from models.db.post import DbPostNotFoundError
+from models.db.user import DbUserNotFoundError
 from server.plugins import current_user
 
 comments_tag = Tag(name="comments")
