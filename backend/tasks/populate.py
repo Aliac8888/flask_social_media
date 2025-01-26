@@ -5,6 +5,7 @@ from logging import getLogger
 from math import ceil
 from random import randint, random, sample, shuffle
 
+from bson.objectid import ObjectId
 from faker import Faker
 from setup import app
 from tqdm import tqdm
@@ -75,11 +76,11 @@ def get_user_dims(users: list[User]) -> list[int]:
             return dims
 
 
-def generate_social_graph(users: list[User]) -> defaultdict[str, set[str]]:
+def generate_social_graph(users: list[User]) -> defaultdict[ObjectId, set[ObjectId]]:
     dims = get_user_dims(users)
     pos_of_obj = {v.id: index_to_pos(k, dims) for k, v in enumerate(users)}
     obj_of_pos = {v: k for k, v in pos_of_obj.items()}
-    followings: defaultdict[str, set[str]] = defaultdict(set)
+    followings: defaultdict[ObjectId, set[ObjectId]] = defaultdict(set)
 
     for follower in users:
         pos = pos_of_obj[follower.id]

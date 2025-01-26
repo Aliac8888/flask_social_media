@@ -1,4 +1,3 @@
-from bson.objectid import ObjectId
 from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -37,7 +36,7 @@ def handle_posts_get(query: PostQuery):  # noqa: ANN201
     posts = (
         get_all_posts()
         if query.author_id is None
-        else get_posts_by_author(ObjectId(query.author_id))
+        else get_posts_by_author(query.author_id)
     )
 
     return model_convert(PostsList, posts).model_dump()
@@ -59,7 +58,7 @@ def handle_posts_feed_get(query: UserId):  # noqa: ANN201
         return AuthFailed().model_dump(), 403
 
     try:
-        posts = get_post_feed(ObjectId(query.user_id))
+        posts = get_post_feed(query.user_id)
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
@@ -80,7 +79,7 @@ def handle_posts_post(body: PostInit):  # noqa: ANN201
     try:
         post = create_post(
             content=body.content,
-            author_id=ObjectId(body.author),
+            author_id=body.author,
         )
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
@@ -95,7 +94,7 @@ def handle_posts_post(body: PostInit):  # noqa: ANN201
 )
 def handle_posts_id_get(path: PostId):  # noqa: ANN201
     try:
-        post = get_post_by_id(ObjectId(path.post_id))
+        post = get_post_by_id(path.post_id)
     except DbPostNotFoundError:
         return PostNotFound().model_dump(), 404
 
@@ -112,9 +111,9 @@ def handle_posts_id_get(path: PostId):  # noqa: ANN201
 def handle_posts_id_patch(path: PostId, body: PostPatch):  # noqa: ANN201
     try:
         update_post(
-            ObjectId(path.post_id),
+            path.post_id,
             content=body.content,
-            author_id=None if current_user.admin else ObjectId(current_user.user_id),
+            author_id=None if current_user.admin else current_user.user_id,
         )
     except DbPostNotFoundError:
         return PostNotFound().model_dump(), 404
@@ -132,8 +131,8 @@ def handle_posts_id_patch(path: PostId, body: PostPatch):  # noqa: ANN201
 def handle_posts_id_delete(path: PostId):  # noqa: ANN201
     try:
         delete_post(
-            ObjectId(path.post_id),
-            author_id=None if current_user.admin else ObjectId(current_user.user_id),
+            path.post_id,
+            author_id=None if current_user.admin else current_user.user_id,
         )
     except DbPostNotFoundError:
         return PostNotFound().model_dump(), 404

@@ -1,8 +1,8 @@
 from pydantic import BaseModel, RootModel
 
-from models.api.mongo import ObjectIdStr, SelfIdStr
 from models.api.temporal import Instant
 from models.api.user import User
+from models.mongo import ObjectIdStr, SelfIdStr
 
 
 class Comment(BaseModel):

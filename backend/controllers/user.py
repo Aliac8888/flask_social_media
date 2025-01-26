@@ -45,7 +45,7 @@ def get_user_by_email(email: str) -> DbUser:
 
 def get_user_followers(following_id: ObjectId) -> DbUserList:
     result = db.users.find(
-        {"followings": ObjectId(following_id)},
+        {"followings": following_id},
     ).to_list()
 
     return DbUserList.model_validate(result)

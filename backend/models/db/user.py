@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr, RootModel
 
-from models.db.mongo import ObjectIdRaw, SelfIdRaw
+from models.mongo import ObjectIdRaw, SelfIdRaw
 
 
 class DbUser(BaseModel):
-    _id: SelfIdRaw
+    id: SelfIdRaw
     name: str
     email: EmailStr
     credential: bytes

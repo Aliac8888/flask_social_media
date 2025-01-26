@@ -1,4 +1,3 @@
-from bson.objectid import ObjectId
 from flask_jwt_extended import create_access_token, jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -43,7 +42,7 @@ def handle_users_get(query: UsersQuery):  # noqa: ANN201
     users = (
         get_all_users()
         if query.following_id is None
-        else get_user_followers(ObjectId(query.following_id))
+        else get_user_followers(query.following_id)
     )
 
     return model_convert(UsersList, users).model_dump()
@@ -122,7 +121,7 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
 )
 def handle_users_id_get(path: UserId):  # noqa: ANN201
     try:
-        user = get_user_by_id(ObjectId(path.user_id))
+        user = get_user_by_id(path.user_id)
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
@@ -157,7 +156,7 @@ def handle_users_id_patch(path: UserId, body: UserPatch):  # noqa: ANN201
 
     try:
         update_user(
-            ObjectId(path.user_id),
+            path.user_id,
             name=body.name,
             email=body.email,
             credential=credential,
@@ -182,7 +181,7 @@ def handle_users_id_delete(path: UserId):  # noqa: ANN201
         return AuthFailed().model_dump(), 403
 
     try:
-        delete_user(ObjectId(path.user_id))
+        delete_user(path.user_id)
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
@@ -196,7 +195,7 @@ def handle_users_id_delete(path: UserId):  # noqa: ANN201
 )
 def handle_users_id_followings_get(path: UserId):  # noqa: ANN201
     try:
-        followings = get_user_followings(ObjectId(path.user_id))
+        followings = get_user_followings(path.user_id)
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
@@ -215,7 +214,7 @@ def handle_users_id_followings_id_put(path: Following):  # noqa: ANN201
         return AuthFailed().model_dump(), 403
 
     try:
-        follow_user(ObjectId(path.follower_id), ObjectId(path.following_id))
+        follow_user(path.follower_id, path.following_id)
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 
@@ -234,7 +233,7 @@ def handle_users_id_followings_id_delete(path: Following):  # noqa: ANN201
         return AuthFailed().model_dump(), 403
 
     try:
-        unfollow_user(ObjectId(path.follower_id), ObjectId(path.following_id))
+        unfollow_user(path.follower_id, path.following_id)
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
 

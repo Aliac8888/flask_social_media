@@ -2,11 +2,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, RootModel
 
-from models.db.mongo import ObjectIdRaw, SelfIdRaw
+from models.mongo import ObjectIdRaw, SelfIdRaw
 
 
 class DbComment(BaseModel):
-    _id: SelfIdRaw
+    id: SelfIdRaw
     content: str
     author: ObjectIdRaw
     post: ObjectIdRaw

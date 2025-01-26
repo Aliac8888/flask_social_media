@@ -1,4 +1,3 @@
-from bson.objectid import ObjectId
 from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -34,7 +33,7 @@ bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 
 @bp.get("/", tags=[comments_tag], responses={200: CommentsList})
 def handle_comments_get(query: PostId):  # noqa: ANN201
-    comments = get_comments_of_post(ObjectId(query.post_id))
+    comments = get_comments_of_post(query.post_id)
 
     return model_convert(CommentsList, comments).model_dump()
 
@@ -57,8 +56,8 @@ def handle_comments_post(body: CommentInit):  # noqa: ANN201
     try:
         comment = create_comment(
             content=body.content,
-            author_id=ObjectId(body.author),
-            post_id=ObjectId(body.post),
+            author_id=body.author,
+            post_id=body.post,
         )
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
@@ -75,7 +74,7 @@ def handle_comments_post(body: CommentInit):  # noqa: ANN201
 )
 def handle_comments_id_get(path: CommentId):  # noqa: ANN201
     try:
-        comment = get_comment_by_id(ObjectId(path.comment_id))
+        comment = get_comment_by_id(path.comment_id)
     except DbCommentNotFoundError:
         return CommentNotFound().model_dump(), 404
 
@@ -92,9 +91,9 @@ def handle_comments_id_get(path: CommentId):  # noqa: ANN201
 def handle_comments_id_patch(path: CommentId, body: CommentPatch):  # noqa: ANN201
     try:
         update_comment(
-            ObjectId(path.comment_id),
+            path.comment_id,
             body.content,
-            None if current_user.admin else ObjectId(current_user.user_id),
+            None if current_user.admin else current_user.user_id,
         )
     except DbCommentNotFoundError:
         return CommentNotFound().model_dump(), 404
@@ -112,8 +111,8 @@ def handle_comments_id_patch(path: CommentId, body: CommentPatch):  # noqa: ANN2
 def handle_comments_id_delete(path: CommentId):  # noqa: ANN201
     try:
         delete_comment(
-            ObjectId(path.comment_id),
-            None if current_user.admin else ObjectId(current_user.user_id),
+            path.comment_id,
+            None if current_user.admin else current_user.user_id,
         )
     except DbCommentNotFoundError:
         return CommentNotFound().model_dump(), 404
