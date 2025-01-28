@@ -22,12 +22,10 @@ from models.db.user import DbUserExistsError, DbUserNotFoundError
 from server.plugins import current_user
 
 users_tag = Tag(name="users")
-followings_tag = Tag(name="followings")
-auth_tag = Tag(name="authentication")
 bp = APIBlueprint("user", __name__, url_prefix="/users")
 
 
-@bp.get("/", tags=[users_tag, followings_tag], responses={200: UsersList})
+@bp.get("/", tags=[users_tag], responses={200: UsersList})
 def handle_users_get():  # noqa: ANN201
     users = get_all_users()
 
