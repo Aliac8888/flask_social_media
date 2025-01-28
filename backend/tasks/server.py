@@ -1,7 +1,4 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent))
+import __init__  # noqa: F401
 
 from server.app import create_app
 from server.config import be_host, be_port

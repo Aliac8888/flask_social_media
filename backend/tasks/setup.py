@@ -1,6 +1,7 @@
 import sys
 from logging import getLogger
 
+import __init__  # noqa: F401
 from pymongo.errors import OperationFailure
 
 from controllers.auth import signup

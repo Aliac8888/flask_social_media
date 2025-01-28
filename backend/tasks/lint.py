@@ -1,6 +1,6 @@
-from os import chdir, execv
-from pathlib import Path
+from os import execv
 from sys import argv
 
-chdir(Path(__file__).parent.parent)
+import __init__  # noqa: F401
+
 execv(".venv/bin/ruff", ["ruff", "check", *argv[1:]])

@@ -6,6 +6,7 @@ from logging import getLogger
 from math import ceil
 from random import randint, random, sample, shuffle
 
+import __init__  # noqa: F401
 from bson.objectid import ObjectId
 from faker import Faker
 from tqdm import tqdm

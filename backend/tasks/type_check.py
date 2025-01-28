@@ -1,8 +1,9 @@
-from os import chdir, execvp
+from os import execvp
 from pathlib import Path
 from sys import argv
 
-chdir(Path(__file__).parent.parent)
+import __init__  # noqa: F401
+
 execvp(
     "pnpm",  # noqa: S607
     [

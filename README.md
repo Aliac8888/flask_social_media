@@ -25,7 +25,7 @@ Frontend Stack:
 - `cd backend`
 - `uv sync`
 - `SOCIAL_BE_MAINTENANCE=1 uv run tasks/setup.py`
-- `uv run server &` (Runs backend)
+- `uv run tasks/server.py &` (Runs backend)
 - `cd ../frontend`
 - `pnpm install`
 - `pnpm vite &` (Runs frontend)

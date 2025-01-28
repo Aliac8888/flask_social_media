@@ -1,15 +1,10 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent))
-
-from os import chdir, execv
-from pathlib import Path
+from os import execv
 from sys import argv
+
+import __init__  # noqa: F401
 
 from server.config import be_host, be_port
 
-chdir(Path(__file__).parent.parent)
 execv(
     ".venv/bin/gunicorn",
     [
