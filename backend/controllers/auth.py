@@ -1,3 +1,5 @@
+from bson.objectid import ObjectId
+
 from models.db.auth import AuthFailedError
 from models.db.user import DbUser
 from server.plugins import bcrypt
@@ -15,6 +17,18 @@ def login(email: str, password: str) -> DbUser:
         raise AuthFailedError
 
     return user
+
+
+def change_password(
+    user_id: ObjectId,
+    password: str,
+) -> None:
+    from controllers.user import update_user
+
+    update_user(
+        user_id,
+        credential=bcrypt.generate_password_hash(password) if password else b"",
+    )
 
 
 def signup(

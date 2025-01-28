@@ -21,27 +21,17 @@ class UserInit(BaseModel):
 class UserPatch(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
-    password: str | None = None
 
     @model_validator(mode="after")
     def is_non_empty(self) -> Self:
-        if self.name is None and self.email is None and self.password is None:
+        if self.name is None and self.email is None:
             raise EmptyPatchError
 
         return self
 
 
-class UsersQuery(BaseModel):
-    following_id: ObjectIdStr | None = None
-
-
 class UserId(BaseModel):
     user_id: ObjectIdStr
-
-
-class Following(BaseModel):
-    follower_id: ObjectIdStr
-    following_id: ObjectIdStr
 
 
 class UserNotFound(BaseModel):

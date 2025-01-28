@@ -22,3 +22,7 @@ class AuthFailed(BaseModel):
 class JwtIdentity(BaseModel):
     user_id: ObjectIdStr
     admin: bool
+
+
+class UserPasswordPatch(BaseModel):
+    password: str
