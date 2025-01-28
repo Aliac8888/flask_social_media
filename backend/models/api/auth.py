@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, RootModel
 
 from models.api.user import User
 from models.mongo import ObjectIdStr
@@ -24,5 +24,4 @@ class JwtIdentity(BaseModel):
     admin: bool
 
 
-class UserPasswordPatch(BaseModel):
-    password: str
+UserPassword = RootModel[str]

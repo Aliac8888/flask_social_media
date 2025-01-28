@@ -4,7 +4,7 @@ from flask_openapi3.models.tag import Tag
 
 from controllers.auth import change_password, login, signup
 from models import model_convert
-from models.api.auth import AuthFailed, AuthRequest, AuthResponse, UserPasswordPatch
+from models.api.auth import AuthFailed, AuthRequest, AuthResponse, UserPassword
 from models.api.user import (
     User,
     UserExists,
@@ -76,7 +76,7 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
     ).model_dump()
 
 
-@bp.patch(
+@bp.put(
     "/<user_id>/password",
     tags=[auth_tag],
     security=[{"jwt": []}],
@@ -87,20 +87,20 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
     },
 )
 @jwt_required()
-def handle_users_id_password_patch(path: UserId, body: UserPasswordPatch):  # noqa: ANN201
+def handle_users_id_password_put(path: UserId, body: UserPassword):  # noqa: ANN201
     if current_user.admin and current_user.user_id == path.user_id:
         return AuthFailed().model_dump(), 403
 
     if not current_user.admin and current_user.user_id != path.user_id:
         return AuthFailed().model_dump(), 403
 
-    if body.password == "" and not maintenance:
+    if body.root == "" and not maintenance:
         return AuthFailed().model_dump(), 403
 
     try:
         change_password(
             path.user_id,
-            password=body.password,
+            password=body.root,
         )
     except DbUserNotFoundError:
         return UserNotFound().model_dump(), 404
