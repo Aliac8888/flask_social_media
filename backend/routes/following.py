@@ -25,10 +25,11 @@ bp = APIBlueprint("following", __name__, url_prefix="/users")
 
 @bp.get(
     "/<user_id>/followers",
+    operation_id="getUserFollowers",
     tags=[followings_tag],
     responses={200: UsersList, 404: UserNotFound},
 )
-def handle_users_id_followers_get(path: UserId):  # noqa: ANN201
+def handle_get_user_followers(path: UserId):  # noqa: ANN201
     try:
         followers = get_user_followers(path.user_id)
     except DbUserNotFoundError:
@@ -39,10 +40,11 @@ def handle_users_id_followers_get(path: UserId):  # noqa: ANN201
 
 @bp.get(
     "/<user_id>/followings",
+    operation_id="getUserFollowings",
     tags=[followings_tag],
     responses={200: UsersList, 404: UserNotFound},
 )
-def handle_users_id_followings_get(path: UserId):  # noqa: ANN201
+def handle_get_user_followings(path: UserId):  # noqa: ANN201
     try:
         followings = get_user_followings(path.user_id)
     except DbUserNotFoundError:
@@ -53,12 +55,13 @@ def handle_users_id_followings_get(path: UserId):  # noqa: ANN201
 
 @bp.put(
     "/<follower_id>/followings/<following_id>",
+    operation_id="followUser",
     tags=[followings_tag],
     security=[{"jwt": []}],
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def handle_users_id_followings_id_put(path: Following):  # noqa: ANN201
+def handle_follow_user(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -72,12 +75,13 @@ def handle_users_id_followings_id_put(path: Following):  # noqa: ANN201
 
 @bp.delete(
     "/<follower_id>/followings/<following_id>",
+    operation_id="unfollowUser",
     tags=[followings_tag],
     security=[{"jwt": []}],
     responses={204: None, 403: AuthFailed, 404: UserNotFound},
 )
 @jwt_required()
-def handle_users_id_followings_id_delete(path: Following):  # noqa: ANN201
+def handle_unfollow_user(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
         return AuthFailed().model_dump(), 403
 

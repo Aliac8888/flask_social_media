@@ -31,8 +31,13 @@ comments_tag = Tag(name="comments")
 bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 
 
-@bp.get("/", tags=[comments_tag], responses={200: CommentsList})
-def handle_comments_get(query: PostId):  # noqa: ANN201
+@bp.get(
+    "/",
+    operation_id="getCommentsOfPost",
+    tags=[comments_tag],
+    responses={200: CommentsList},
+)
+def handle_get_comments_of_post(query: PostId):  # noqa: ANN201
     comments = get_comments_of_post(query.post_id)
 
     return model_convert(CommentsList, comments).model_dump()
@@ -40,6 +45,7 @@ def handle_comments_get(query: PostId):  # noqa: ANN201
 
 @bp.post(
     "/",
+    operation_id="createComment",
     tags=[comments_tag],
     security=[{"jwt": []}],
     responses={
@@ -49,7 +55,7 @@ def handle_comments_get(query: PostId):  # noqa: ANN201
     },
 )
 @jwt_required()
-def handle_comments_post(body: CommentInit):  # noqa: ANN201
+def handle_create_comment(body: CommentInit):  # noqa: ANN201
     if current_user.user_id != body.author and not current_user.admin:
         return AuthFailed().model_dump(), 403
 
@@ -69,10 +75,11 @@ def handle_comments_post(body: CommentInit):  # noqa: ANN201
 
 @bp.get(
     "/<comment_id>",
+    operation_id="getCommentById",
     tags=[comments_tag],
     responses={200: Comment, 404: CommentNotFound},
 )
-def handle_comments_id_get(path: CommentId):  # noqa: ANN201
+def handle_get_comment_by_id(path: CommentId):  # noqa: ANN201
     try:
         comment = get_comment_by_id(path.comment_id)
     except DbCommentNotFoundError:
@@ -83,12 +90,13 @@ def handle_comments_id_get(path: CommentId):  # noqa: ANN201
 
 @bp.patch(
     "/<comment_id>",
+    operation_id="updateComment",
     tags=[comments_tag],
     security=[{"jwt": []}],
     responses={204: None, 404: CommentNotFound},
 )
 @jwt_required()
-def handle_comments_id_patch(path: CommentId, body: CommentPatch):  # noqa: ANN201
+def handle_update_comment(path: CommentId, body: CommentPatch):  # noqa: ANN201
     try:
         update_comment(
             path.comment_id,
@@ -103,12 +111,13 @@ def handle_comments_id_patch(path: CommentId, body: CommentPatch):  # noqa: ANN2
 
 @bp.delete(
     "/<comment_id>",
+    operation_id="deleteComment",
     tags=[comments_tag],
     security=[{"jwt": []}],
     responses={204: None, 404: CommentNotFound},
 )
 @jwt_required()
-def handle_comments_id_delete(path: CommentId):  # noqa: ANN201
+def handle_delete_comment(path: CommentId):  # noqa: ANN201
     try:
         delete_comment(
             path.comment_id,

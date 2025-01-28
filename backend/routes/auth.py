@@ -23,6 +23,7 @@ bp = APIBlueprint("auth", __name__, url_prefix="/users")
 
 @bp.post(
     "/signup",
+    operation_id="signup",
     tags=[auth_tag],
     responses={
         201: AuthResponse,
@@ -30,7 +31,7 @@ bp = APIBlueprint("auth", __name__, url_prefix="/users")
         409: UserExists,
     },
 )
-def handle_users_post(body: UserInit):  # noqa: ANN201
+def handle_signup(body: UserInit):  # noqa: ANN201
     if body.email == admin_email and not maintenance:
         return UserExists().model_dump(), 409
 
@@ -56,10 +57,11 @@ def handle_users_post(body: UserInit):  # noqa: ANN201
 
 @bp.post(
     "/login",
+    operation_id="login",
     tags=[auth_tag],
     responses={200: AuthResponse, 403: AuthFailed},
 )
-def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
+def handle_login(body: AuthRequest):  # noqa: ANN201
     if not body.password and not maintenance:
         return AuthFailed().model_dump(), 403
 
@@ -78,6 +80,7 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
 
 @bp.put(
     "/<user_id>/password",
+    operation_id="changePassword",
     tags=[auth_tag],
     security=[{"jwt": []}],
     responses={
@@ -87,7 +90,7 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
     },
 )
 @jwt_required()
-def handle_users_id_password_put(path: UserId, body: UserPassword):  # noqa: ANN201
+def handle_change_password(path: UserId, body: UserPassword):  # noqa: ANN201
     if current_user.admin and current_user.user_id == path.user_id:
         return AuthFailed().model_dump(), 403
 
