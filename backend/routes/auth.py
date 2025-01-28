@@ -87,8 +87,11 @@ def handle_users_login_post(body: AuthRequest):  # noqa: ANN201
     },
 )
 @jwt_required()
-def handle_users_id_patch(path: UserId, body: UserPasswordPatch):  # noqa: ANN201
-    if current_user.user_id != path.user_id and not current_user.admin:
+def handle_users_id_password_patch(path: UserId, body: UserPasswordPatch):  # noqa: ANN201
+    if current_user.admin and current_user.user_id == path.user_id:
+        return AuthFailed().model_dump(), 403
+
+    if not current_user.admin and current_user.user_id != path.user_id:
         return AuthFailed().model_dump(), 403
 
     if body.password == "" and not maintenance:
