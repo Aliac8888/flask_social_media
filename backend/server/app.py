@@ -1,3 +1,5 @@
+from flask_openapi3.models.info import Info
+from flask_openapi3.models.license import License
 from flask_openapi3.openapi import OpenAPI
 
 from routes import bp
@@ -6,8 +8,18 @@ from server.config import jwt_expiry, jwt_secret
 
 
 def create_app() -> OpenAPI:
+    info = Info(
+        title="Chamran Social",
+        license=License(
+            name="MIT",
+            identifier="MIT",
+        ),
+        version="0.0",
+    )
+
     app = OpenAPI(
         __name__,
+        info=info,
         security_schemes={
             "jwt": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
         },
