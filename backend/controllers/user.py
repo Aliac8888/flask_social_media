@@ -43,7 +43,6 @@ def get_user_by_email(email: str) -> DbUser:
     return result and DbUser.model_validate(result)
 
 
-
 def create_user(
     name: str,
     email: str,

@@ -12,8 +12,9 @@ from tqdm import tqdm
 
 from controllers.auth import signup
 from controllers.comment import create_comment
+from controllers.following import follow_user
 from controllers.post import create_post
-from controllers.user import delete_user, follow_user, get_all_users
+from controllers.user import delete_user, get_all_users
 from models.db.user import DbUser, DbUserExistsError, DbUserNotFoundError
 from tasks.setup import setup
 

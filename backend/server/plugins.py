@@ -2,8 +2,8 @@ from typing import Any, cast
 
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, get_current_user
-from werkzeug.local import LocalProxy
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended import current_user as _current_user
 
 from models.api.auth import JwtIdentity
 from models.api.user import User
@@ -27,4 +27,4 @@ def user_lookup(_jwt_header: dict[str, Any], jwt_data: dict[str, Any]) -> JwtIde
     return JwtIdentity.model_validate_json(jwt_data["sub"])
 
 
-current_user = cast(JwtIdentity, LocalProxy[JwtIdentity](lambda: get_current_user()))
+current_user = cast(JwtIdentity, _current_user)
