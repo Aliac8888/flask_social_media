@@ -33,6 +33,29 @@ def handle_get_all_users():  # noqa: ANN201
 
 
 @bp.get(
+    "/me",
+    operation_id="getCurrentUser",
+    tags=[users_tag],
+    security=[{}, {"jwt": []}],
+    responses={
+        200: User,
+        404: UserNotFound,
+    },
+)
+@jwt_required(optional=True)
+def handle_get_current_user():  # noqa: ANN201
+    if not current_user:
+        return UserNotFound().model_dump(), 404
+
+    try:
+        user = get_user_by_id(current_user.user_id)
+    except DbUserNotFoundError:
+        return UserNotFound().model_dump(), 404
+
+    return model_convert(User, user).model_dump()
+
+
+@bp.get(
     "/<user_id>",
     operation_id="getUserById",
     tags=[users_tag],
