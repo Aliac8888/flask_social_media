@@ -22,7 +22,7 @@ bp = APIBlueprint("auth", __name__, url_prefix="/users")
 
 
 @bp.post(
-    "/",
+    "/signup",
     tags=[auth_tag],
     responses={
         201: AuthResponse,
