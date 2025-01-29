@@ -2,14 +2,14 @@ from bson.objectid import ObjectId
 from pydantic import validate_email
 from pymongo.errors import OperationFailure
 
-from models.db.user import (
+from server.config import admin_email
+from server.db import DUPLICATE_KEY, db
+from server.users.controller_model import (
     DbUser,
     DbUserExistsError,
     DbUserList,
     DbUserNotFoundError,
 )
-from server.config import admin_email
-from server.db import DUPLICATE_KEY, db
 
 
 def get_all_users() -> DbUserList:
@@ -107,8 +107,8 @@ def update_user(
 
 
 def delete_user(user_id: ObjectId) -> None:
-    from controllers.comment import delete_comments_by_author
-    from controllers.post import delete_posts_by_author
+    from server.comments.controller import delete_comments_by_author
+    from server.posts.controller import delete_posts_by_author
 
     result = db.users.delete_one(
         {"_id": user_id, "email": {"$ne": {"$literal": admin_email}}},

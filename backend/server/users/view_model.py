@@ -2,8 +2,7 @@ from typing import Self
 
 from pydantic import BaseModel, EmailStr, RootModel, model_validator
 
-from models.api.error import EmptyPatchError
-from models.mongo import ObjectIdStr, SelfIdStr
+from server.model_utils import EmptyPatchError, ObjectIdStr, SelfIdStr
 
 
 class User(BaseModel):

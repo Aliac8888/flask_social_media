@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, RootModel
 
-from models.db.user import DbUser
-from models.mongo import SelfIdRaw
+from server.model_utils import SelfIdRaw
+from server.users.controller_model import DbUser
 
 
 class DbPost(BaseModel):

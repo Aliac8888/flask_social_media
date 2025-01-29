@@ -2,15 +2,17 @@ from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
-from controllers.user import (
+from server.auth.view_model import AuthnFailed, AuthzFailed
+from server.model_utils import model_convert
+from server.plugins import current_user
+from server.users.controller import (
     delete_user,
     get_all_users,
     get_user_by_id,
     update_user,
 )
-from models import model_convert
-from models.api.auth import AuthnFailed, AuthzFailed
-from models.api.user import (
+from server.users.controller_model import DbUserExistsError, DbUserNotFoundError
+from server.users.view_model import (
     User,
     UserExists,
     UserId,
@@ -18,8 +20,6 @@ from models.api.user import (
     UserPatch,
     UsersList,
 )
-from models.db.user import DbUserExistsError, DbUserNotFoundError
-from server.plugins import current_user
 
 users_tag = Tag(name="users")
 bp = APIBlueprint("user", __name__, url_prefix="/users")

@@ -5,7 +5,7 @@ from logging import getLogger
 import __init__  # noqa: F401
 from pymongo.errors import OperationFailure
 
-from controllers.auth import signup
+from server.auth.controller import signup
 from server.config import (
     admin_email,
     admin_pass,

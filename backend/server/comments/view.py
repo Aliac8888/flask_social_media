@@ -3,16 +3,16 @@ from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 from pydantic import RootModel
 
-from controllers.comment import (
+from server.auth.view_model import AuthnFailed, AuthzFailed
+from server.comments.controller import (
     create_comment,
     delete_comment,
     get_comment_by_id,
     get_comments_of_post,
     update_comment,
 )
-from models import model_convert
-from models.api.auth import AuthnFailed, AuthzFailed
-from models.api.comment import (
+from server.comments.controller_model import DbCommentNotFoundError
+from server.comments.view_model import (
     Comment,
     CommentId,
     CommentInit,
@@ -20,12 +20,12 @@ from models.api.comment import (
     CommentPatch,
     CommentsList,
 )
-from models.api.post import PostId, PostNotFound
-from models.api.user import UserNotFound
-from models.db.comments import DbCommentNotFoundError
-from models.db.post import DbPostNotFoundError
-from models.db.user import DbUserNotFoundError
+from server.model_utils import model_convert
 from server.plugins import current_user
+from server.posts.controller_model import DbPostNotFoundError
+from server.posts.view_model import PostId, PostNotFound
+from server.users.controller_model import DbUserNotFoundError
+from server.users.view_model import UserNotFound
 
 comments_tag = Tag(name="comments")
 bp = APIBlueprint("comment", __name__, url_prefix="/comments")

@@ -4,7 +4,7 @@ from sys import stdout
 
 import __init__  # noqa: F401
 
-from controllers.user import get_all_users
+from server.users.controller import get_all_users
 
 stdout.write("digraph U {\n")
 

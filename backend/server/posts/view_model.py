@@ -1,8 +1,7 @@
 from pydantic import BaseModel, RootModel
 
-from models.api.temporal import Instant
-from models.api.user import User
-from models.mongo import ObjectIdStr, SelfIdStr
+from server.model_utils import Instant, ObjectIdStr, SelfIdStr
+from server.users.view_model import User
 
 
 class Post(BaseModel):

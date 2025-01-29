@@ -12,12 +12,12 @@ from bson.objectid import ObjectId
 from faker import Faker
 from tqdm import tqdm
 
-from controllers.auth import signup
-from controllers.comment import create_comment
-from controllers.following import follow_user
-from controllers.post import create_post
-from controllers.user import delete_user, get_all_users
-from models.db.user import DbUser, DbUserExistsError, DbUserNotFoundError
+from server.auth.controller import signup
+from server.comments.controller import create_comment
+from server.followings.controller import follow_user
+from server.posts.controller import create_post
+from server.users.controller import delete_user, get_all_users
+from server.users.controller_model import DbUser, DbUserExistsError, DbUserNotFoundError
 from tasks.setup import setup
 
 USERS_MIN = 500

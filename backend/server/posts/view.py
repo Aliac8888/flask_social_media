@@ -2,7 +2,10 @@ from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
-from controllers.post import (
+from server.auth.view_model import AuthnFailed, AuthzFailed
+from server.model_utils import model_convert
+from server.plugins import current_user
+from server.posts.controller import (
     create_post,
     delete_post,
     get_all_posts,
@@ -11,9 +14,8 @@ from controllers.post import (
     get_posts_by_author,
     update_post,
 )
-from models import model_convert
-from models.api.auth import AuthnFailed, AuthzFailed
-from models.api.post import (
+from server.posts.controller_model import DbPostNotFoundError
+from server.posts.view_model import (
     Post,
     PostId,
     PostInit,
@@ -22,10 +24,8 @@ from models.api.post import (
     PostQuery,
     PostsList,
 )
-from models.api.user import UserId, UserNotFound
-from models.db.post import DbPostNotFoundError
-from models.db.user import DbUserNotFoundError
-from server.plugins import current_user
+from server.users.controller_model import DbUserNotFoundError
+from server.users.view_model import UserId, UserNotFound
 
 posts_tag = Tag(name="posts")
 bp = APIBlueprint("post", __name__, url_prefix="/posts")

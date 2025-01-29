@@ -2,22 +2,18 @@ from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
-from controllers.following import (
+from server.auth.view_model import AuthnFailed, AuthzFailed
+from server.followings.controller import (
     follow_user,
     get_user_followers,
     get_user_followings,
     unfollow_user,
 )
-from models import model_convert
-from models.api.auth import AuthnFailed, AuthzFailed
-from models.api.following import Following
-from models.api.user import (
-    UserId,
-    UserNotFound,
-    UsersList,
-)
-from models.db.user import DbUserNotFoundError
+from server.followings.view_model import Following
+from server.model_utils import model_convert
 from server.plugins import current_user
+from server.users.controller_model import DbUserNotFoundError
+from server.users.view_model import UserId, UserNotFound, UsersList
 
 followings_tag = Tag(name="followings")
 bp = APIBlueprint("following", __name__, url_prefix="/users")

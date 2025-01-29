@@ -5,14 +5,14 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import current_user as _current_user
 
-from models.api.auth import (
+from server.auth.view_model import (
     AuthnExpired,
     AuthnIdentity,
     AuthnInvalid,
     AuthnMissing,
 )
-from models.api.user import User
 from server.config import admin_email, fe_url
+from server.users.view_model import User
 
 bcrypt = Bcrypt()
 cors = CORS(origins=fe_url)

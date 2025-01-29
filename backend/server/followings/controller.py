@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 
-from models.db.user import DbUserList, DbUserNotFoundError
 from server.db import db
+from server.users.controller_model import DbUserList, DbUserNotFoundError
 
 
 def get_user_followers(following_id: ObjectId) -> DbUserList:
@@ -13,7 +13,7 @@ def get_user_followers(following_id: ObjectId) -> DbUserList:
 
 
 def get_user_followings(follower_id: ObjectId) -> DbUserList:
-    from controllers.user import get_user_by_id
+    from server.users.controller import get_user_by_id
 
     follower = get_user_by_id(follower_id)
 
@@ -23,7 +23,7 @@ def get_user_followings(follower_id: ObjectId) -> DbUserList:
 
 
 def follow_user(follower_id: ObjectId, following_id: ObjectId) -> bool:
-    from controllers.user import validate_user_id
+    from server.users.controller import validate_user_id
 
     validate_user_id(following_id)
 
@@ -39,7 +39,7 @@ def follow_user(follower_id: ObjectId, following_id: ObjectId) -> bool:
 
 
 def unfollow_user(follower_id: ObjectId, following_id: ObjectId) -> bool:
-    from controllers.user import validate_user_id
+    from server.users.controller import validate_user_id
 
     validate_user_id(following_id)
 

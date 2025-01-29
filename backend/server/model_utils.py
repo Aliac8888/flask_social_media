@@ -1,15 +1,24 @@
+from datetime import UTC, datetime
 from typing import Annotated
 
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
 from pydantic import (
+    AfterValidator,
     AliasChoices,
+    BaseModel,
     BeforeValidator,
     Field,
     GetPydanticSchema,
     PlainSerializer,
 )
 from pydantic_core.core_schema import any_schema, str_schema
+
+Instant = Annotated[
+    datetime,
+    AfterValidator(lambda x: x.astimezone(tz=UTC)),
+    PlainSerializer(lambda x: x.strftime("%Y-%m-%dT%H:%M:%SZ")),
+]
 
 
 class InvalidObjectIdError(ValueError):
@@ -51,3 +60,12 @@ SelfIdStr = Annotated[
         validation_alias=AliasChoices("id", "_id"),
     ),
 ]
+
+
+class EmptyPatchError(ValueError):
+    def __init__(self) -> None:
+        super().__init__("Patch is empty")
+
+
+def model_convert[T: BaseModel](target: type[T], value: BaseModel) -> T:
+    return target.model_validate(value.model_dump(by_alias=True))

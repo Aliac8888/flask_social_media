@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from models.mongo import ObjectIdStr
+from server.model_utils import ObjectIdStr
 
 
 class Following(BaseModel):

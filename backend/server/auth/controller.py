@@ -1,12 +1,12 @@
 from bson.objectid import ObjectId
 
-from models.db.auth import AuthnFailedError
-from models.db.user import DbUser
+from server.auth.controller_model import AuthnFailedError
 from server.plugins import bcrypt
+from server.users.controller_model import DbUser
 
 
 def login(email: str, password: str) -> DbUser:
-    from controllers.user import get_user_by_email
+    from server.users.controller import get_user_by_email
 
     user = get_user_by_email(email)
 
@@ -23,7 +23,7 @@ def change_password(
     user_id: ObjectId,
     password: str,
 ) -> None:
-    from controllers.user import update_user
+    from server.users.controller import update_user
 
     update_user(
         user_id,
@@ -36,7 +36,7 @@ def signup(
     email: str,
     password: str,
 ) -> DbUser:
-    from controllers.user import create_user
+    from server.users.controller import create_user
 
     credential = bcrypt.generate_password_hash(password) if password else b""
 

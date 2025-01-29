@@ -2,26 +2,20 @@ from flask_jwt_extended import create_access_token, jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
 
-from controllers.auth import change_password, login, signup
-from models import model_convert
-from models.api.auth import (
+from server.auth.controller import change_password, login, signup
+from server.auth.controller_model import AuthnFailedError
+from server.auth.view_model import (
     AuthnFailed,
     AuthnRequest,
     AuthnResponse,
     AuthzFailed,
     UserPassword,
 )
-from models.api.user import (
-    User,
-    UserExists,
-    UserId,
-    UserInit,
-    UserNotFound,
-)
-from models.db.auth import AuthnFailedError
-from models.db.user import DbUserExistsError, DbUserNotFoundError
 from server.config import admin_email, maintenance
+from server.model_utils import model_convert
 from server.plugins import current_user
+from server.users.controller_model import DbUserExistsError, DbUserNotFoundError
+from server.users.view_model import User, UserExists, UserId, UserInit, UserNotFound
 
 auth_tag = Tag(name="authentication")
 bp = APIBlueprint("auth", __name__, url_prefix="/users")
