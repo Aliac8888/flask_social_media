@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import __init__  # noqa: F401
 
 from server.app import create_app

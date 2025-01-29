@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from json import dumps
 from sys import stdout
 

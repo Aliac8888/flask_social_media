@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from os import execv
 from sys import argv
 

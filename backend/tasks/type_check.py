@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from os import execvp
 from pathlib import Path
 from sys import argv
