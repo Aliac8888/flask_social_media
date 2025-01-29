@@ -4,7 +4,13 @@ from flask_openapi3.models.tag import Tag
 
 from controllers.auth import change_password, login, signup
 from models import model_convert
-from models.api.auth import AuthFailed, AuthRequest, AuthResponse, UserPassword
+from models.api.auth import (
+    AuthnFailed,
+    AuthnRequest,
+    AuthnResponse,
+    AuthzFailed,
+    UserPassword,
+)
 from models.api.user import (
     User,
     UserExists,
@@ -12,7 +18,7 @@ from models.api.user import (
     UserInit,
     UserNotFound,
 )
-from models.db.auth import AuthFailedError
+from models.db.auth import AuthnFailedError
 from models.db.user import DbUserExistsError, DbUserNotFoundError
 from server.config import admin_email, maintenance
 from server.plugins import current_user
@@ -26,8 +32,8 @@ bp = APIBlueprint("auth", __name__, url_prefix="/users")
     operation_id="signup",
     tags=[auth_tag],
     responses={
-        201: AuthResponse,
-        403: AuthFailed,
+        201: AuthnResponse,
+        403: AuthzFailed,
         409: UserExists,
     },
 )
@@ -36,7 +42,7 @@ def handle_signup(body: UserInit):  # noqa: ANN201
         return UserExists().model_dump(), 409
 
     if not body.password and not maintenance:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         user = signup(
@@ -49,7 +55,7 @@ def handle_signup(body: UserInit):  # noqa: ANN201
 
     user = model_convert(User, user)
 
-    return AuthResponse(
+    return AuthnResponse(
         user=user,
         jwt=create_access_token(user),
     ).model_dump()
@@ -59,20 +65,20 @@ def handle_signup(body: UserInit):  # noqa: ANN201
     "/login",
     operation_id="login",
     tags=[auth_tag],
-    responses={200: AuthResponse, 403: AuthFailed},
+    responses={200: AuthnResponse, 403: AuthzFailed},
 )
-def handle_login(body: AuthRequest):  # noqa: ANN201
+def handle_login(body: AuthnRequest):  # noqa: ANN201
     if not body.password and not maintenance:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         user = login(body.email, body.password)
-    except (DbUserNotFoundError, AuthFailedError):
-        return AuthFailed().model_dump(), 403
+    except (DbUserNotFoundError, AuthnFailedError):
+        return AuthzFailed().model_dump(), 403
 
     user = model_convert(User, user)
 
-    return AuthResponse(
+    return AuthnResponse(
         user=user,
         jwt=create_access_token(user),
     ).model_dump()
@@ -85,20 +91,21 @@ def handle_login(body: AuthRequest):  # noqa: ANN201
     security=[{"jwt": []}],
     responses={
         204: None,
-        403: AuthFailed,
+        401: AuthnFailed,
+        403: AuthzFailed,
         404: UserNotFound,
     },
 )
 @jwt_required()
 def handle_change_password(path: UserId, body: UserPassword):  # noqa: ANN201
     if current_user.admin and current_user.user_id == path.user_id:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     if not current_user.admin and current_user.user_id != path.user_id:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     if body.root == "" and not maintenance:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         change_password(

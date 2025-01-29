@@ -1,6 +1,6 @@
 from bson.objectid import ObjectId
 
-from models.db.auth import AuthFailedError
+from models.db.auth import AuthnFailedError
 from models.db.user import DbUser
 from server.plugins import bcrypt
 
@@ -14,7 +14,7 @@ def login(email: str, password: str) -> DbUser:
         user.credential,
         password,
     ):
-        raise AuthFailedError
+        raise AuthnFailedError
 
     return user
 

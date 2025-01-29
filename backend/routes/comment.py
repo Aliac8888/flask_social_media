@@ -11,7 +11,7 @@ from controllers.comment import (
     update_comment,
 )
 from models import model_convert
-from models.api.auth import AuthFailed
+from models.api.auth import AuthnFailed, AuthzFailed
 from models.api.comment import (
     Comment,
     CommentId,
@@ -50,14 +50,15 @@ def handle_get_comments_of_post(query: PostId):  # noqa: ANN201
     security=[{"jwt": []}],
     responses={
         201: CommentId,
-        403: AuthFailed,
+        401: AuthnFailed,
+        403: AuthzFailed,
         404: RootModel[UserNotFound | PostNotFound],
     },
 )
 @jwt_required()
 def handle_create_comment(body: CommentInit):  # noqa: ANN201
     if current_user.user_id != body.author and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         comment = create_comment(
@@ -93,7 +94,7 @@ def handle_get_comment_by_id(path: CommentId):  # noqa: ANN201
     operation_id="updateComment",
     tags=[comments_tag],
     security=[{"jwt": []}],
-    responses={204: None, 404: CommentNotFound},
+    responses={204: None, 401: AuthnFailed, 404: CommentNotFound},
 )
 @jwt_required()
 def handle_update_comment(path: CommentId, body: CommentPatch):  # noqa: ANN201
@@ -114,7 +115,7 @@ def handle_update_comment(path: CommentId, body: CommentPatch):  # noqa: ANN201
     operation_id="deleteComment",
     tags=[comments_tag],
     security=[{"jwt": []}],
-    responses={204: None, 404: CommentNotFound},
+    responses={204: None, 401: AuthnFailed, 404: CommentNotFound},
 )
 @jwt_required()
 def handle_delete_comment(path: CommentId):  # noqa: ANN201

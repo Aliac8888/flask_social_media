@@ -4,24 +4,44 @@ from models.api.user import User
 from models.mongo import ObjectIdStr
 
 
-class AuthRequest(BaseModel):
+class AuthnRequest(BaseModel):
     email: EmailStr
     password: str
 
 
-class AuthResponse(BaseModel):
+class AuthnResponse(BaseModel):
     user: User
     jwt: str
 
 
-class AuthFailed(BaseModel):
-    type: str = "AuthFailed"
-    message: str = "Authentication failed"
+class AuthnExpired(BaseModel):
+    type: str = "AuthnExpired"
+    message: str = "JWT authentication token is expired"
+    details: str
 
 
-class JwtIdentity(BaseModel):
+class AuthnInvalid(BaseModel):
+    type: str = "AuthnInvalid"
+    message: str = "JWT authentication token is invalid"
+    details: str
+
+
+class AuthnMissing(BaseModel):
+    type: str = "AuthnMissing"
+    message: str = "JWT authentication token is missing"
+    details: str
+
+
+class AuthnIdentity(BaseModel):
     user_id: ObjectIdStr
     admin: bool
 
 
 UserPassword = RootModel[str]
+
+AuthnFailed = RootModel[AuthnExpired | AuthnInvalid | AuthnMissing]
+
+
+class AuthzFailed(BaseModel):
+    type: str = "AuthzFailed"
+    message: str = "User cannot access this resource"

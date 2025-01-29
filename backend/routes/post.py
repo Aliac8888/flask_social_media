@@ -12,7 +12,7 @@ from controllers.post import (
     update_post,
 )
 from models import model_convert
-from models.api.auth import AuthFailed
+from models.api.auth import AuthnFailed, AuthzFailed
 from models.api.post import (
     Post,
     PostId,
@@ -49,14 +49,15 @@ def handle_get_all_posts(query: PostQuery):  # noqa: ANN201
     security=[{"jwt": []}],
     responses={
         200: PostsList,
-        403: AuthFailed,
+        401: AuthnFailed,
+        403: AuthzFailed,
         404: UserNotFound,
     },
 )
 @jwt_required()
 def handle_get_post_feed(query: UserId):  # noqa: ANN201
     if current_user.user_id != query.user_id and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         posts = get_post_feed(query.user_id)
@@ -71,12 +72,12 @@ def handle_get_post_feed(query: UserId):  # noqa: ANN201
     operation_id="createPost",
     tags=[posts_tag],
     security=[{"jwt": []}],
-    responses={201: Post, 403: AuthFailed, 404: UserNotFound},
+    responses={201: Post, 401: AuthnFailed, 403: AuthzFailed, 404: UserNotFound},
 )
 @jwt_required()
 def handle_create_post(body: PostInit):  # noqa: ANN201
     if current_user.user_id != body.author and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         post = create_post(
@@ -109,7 +110,7 @@ def handle_get_post_by_id(path: PostId):  # noqa: ANN201
     operation_id="updatePost",
     tags=[posts_tag],
     security=[{"jwt": []}],
-    responses={204: None, 404: PostNotFound},
+    responses={204: None, 401: AuthnFailed, 404: PostNotFound},
 )
 @jwt_required()
 def handle_update_post(path: PostId, body: PostPatch):  # noqa: ANN201
@@ -130,7 +131,7 @@ def handle_update_post(path: PostId, body: PostPatch):  # noqa: ANN201
     operation_id="deletePost",
     tags=[posts_tag],
     security=[{"jwt": []}],
-    responses={204: None, 404: PostNotFound},
+    responses={204: None, 401: AuthnFailed, 404: PostNotFound},
 )
 @jwt_required()
 def handle_delete_post(path: PostId):  # noqa: ANN201

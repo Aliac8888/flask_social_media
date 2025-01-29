@@ -9,7 +9,7 @@ from controllers.following import (
     unfollow_user,
 )
 from models import model_convert
-from models.api.auth import AuthFailed
+from models.api.auth import AuthnFailed, AuthzFailed
 from models.api.following import Following
 from models.api.user import (
     UserId,
@@ -58,12 +58,12 @@ def handle_get_user_followings(path: UserId):  # noqa: ANN201
     operation_id="followUser",
     tags=[followings_tag],
     security=[{"jwt": []}],
-    responses={204: None, 403: AuthFailed, 404: UserNotFound},
+    responses={204: None, 401: AuthnFailed, 403: AuthzFailed, 404: UserNotFound},
 )
 @jwt_required()
 def handle_follow_user(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         follow_user(path.follower_id, path.following_id)
@@ -78,12 +78,12 @@ def handle_follow_user(path: Following):  # noqa: ANN201
     operation_id="unfollowUser",
     tags=[followings_tag],
     security=[{"jwt": []}],
-    responses={204: None, 403: AuthFailed, 404: UserNotFound},
+    responses={204: None, 401: AuthnFailed, 403: AuthzFailed, 404: UserNotFound},
 )
 @jwt_required()
 def handle_unfollow_user(path: Following):  # noqa: ANN201
     if current_user.user_id != path.follower_id and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         unfollow_user(path.follower_id, path.following_id)

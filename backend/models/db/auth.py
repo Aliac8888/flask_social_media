@@ -1,2 +1,2 @@
-class AuthFailedError(Exception):
+class AuthnFailedError(Exception):
     pass

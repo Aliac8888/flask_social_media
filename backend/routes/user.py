@@ -9,7 +9,7 @@ from controllers.user import (
     update_user,
 )
 from models import model_convert
-from models.api.auth import AuthFailed
+from models.api.auth import AuthnFailed, AuthzFailed
 from models.api.user import (
     User,
     UserExists,
@@ -39,6 +39,7 @@ def handle_get_all_users():  # noqa: ANN201
     security=[{}, {"jwt": []}],
     responses={
         200: User,
+        401: AuthnFailed,
         404: UserNotFound,
     },
 )
@@ -80,7 +81,8 @@ def handle_get_user_by_id(path: UserId):  # noqa: ANN201
     security=[{"jwt": []}],
     responses={
         204: None,
-        403: AuthFailed,
+        401: AuthnFailed,
+        403: AuthzFailed,
         404: UserNotFound,
         409: UserExists,
     },
@@ -88,7 +90,7 @@ def handle_get_user_by_id(path: UserId):  # noqa: ANN201
 @jwt_required()
 def handle_update_user(path: UserId, body: UserPatch):  # noqa: ANN201
     if current_user.user_id != path.user_id and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         update_user(
@@ -109,12 +111,12 @@ def handle_update_user(path: UserId, body: UserPatch):  # noqa: ANN201
     operation_id="deleteUser",
     tags=[users_tag],
     security=[{"jwt": []}],
-    responses={204: None, 403: AuthFailed, 404: UserNotFound},
+    responses={204: None, 401: AuthnFailed, 403: AuthzFailed, 404: UserNotFound},
 )
 @jwt_required()
 def handle_delete_user(path: UserId):  # noqa: ANN201
     if current_user.user_id != path.user_id and not current_user.admin:
-        return AuthFailed().model_dump(), 403
+        return AuthzFailed().model_dump(), 403
 
     try:
         delete_user(path.user_id)
