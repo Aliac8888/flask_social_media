@@ -26,7 +26,7 @@ class PostInit(BaseModel):
 class PostPatch(BaseModel):
     """Post modification."""
 
-    content: str
+    content: str | None = None
 
 
 class PostId(BaseModel):

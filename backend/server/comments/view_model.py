@@ -28,7 +28,7 @@ class CommentInit(BaseModel):
 class CommentPatch(BaseModel):
     """Comment modification."""
 
-    content: str
+    content: str | None
 
 
 class CommentId(BaseModel):

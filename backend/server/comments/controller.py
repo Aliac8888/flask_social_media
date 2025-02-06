@@ -107,6 +107,7 @@ def get_comments_by_author(author_id: ObjectId) -> DbCommentList:
 
     """
     from server.users.controller import get_user_by_id
+
     author = get_user_by_id(author_id)
 
     result = db.comments.find({"author": author_id}).to_list()
@@ -157,13 +158,13 @@ def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbCo
 
 
 def update_comment(
-    comment_id: ObjectId, content: str, author_id: ObjectId | None = None
-) -> None:
+    comment_id: ObjectId, content: str | None = None, author_id: ObjectId | None = None
+) -> bool:
     """Update a comment.
 
     Args:
         comment_id (ObjectId): Id of comment.
-        content (str): New content
+        content (str, optional): New content. Defaults to None.
         author_id (ObjectId, optional): Expected comment author. Defaults to None,
             which allows any author.
 
@@ -171,6 +172,9 @@ def update_comment(
         DbPostNotFoundError: No comment with the given ID and author was found.
 
     """
+    if content is None:
+        return False
+
     now = datetime.now(UTC)
     comment_filter = {"_id": comment_id}
 
@@ -189,6 +193,8 @@ def update_comment(
 
     if result.matched_count < 1:
         raise DbCommentNotFoundError
+
+    return result.modified_count > 0
 
 
 def delete_comment(comment_id: ObjectId, author_id: ObjectId | None = None) -> None:

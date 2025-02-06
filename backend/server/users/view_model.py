@@ -1,10 +1,8 @@
 """Models for Users API."""
 
-from typing import Self
+from pydantic import BaseModel, EmailStr, RootModel
 
-from pydantic import BaseModel, EmailStr, RootModel, model_validator
-
-from server.model_utils import EmptyPatchError, ObjectIdStr, SelfIdStr
+from server.model_utils import ObjectIdStr, SelfIdStr
 
 
 class User(BaseModel):
@@ -28,13 +26,6 @@ class UserPatch(BaseModel):
 
     name: str | None = None
     email: EmailStr | None = None
-
-    @model_validator(mode="after")
-    def _is_non_empty(self) -> Self:
-        if self.name is None and self.email is None:
-            raise EmptyPatchError
-
-        return self
 
 
 class UserId(BaseModel):

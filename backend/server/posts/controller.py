@@ -187,14 +187,14 @@ def create_post(
 
 def update_post(
     post_id: ObjectId,
-    content: str,
+    content: str | None = None,
     author_id: ObjectId | None = None,
-) -> None:
+) -> bool:
     """Update post.
 
     Args:
         post_id (ObjectId): Id of post.
-        content (str): New content.
+        content (str, optional): New content. Defaults to None.
         author_id (ObjectId, optional): Expected post author. Defaults to None,
             which allows any author.
 
@@ -202,6 +202,9 @@ def update_post(
         DbPostNotFoundError: No post with the given ID and author was found.
 
     """
+    if content is None:
+        return False
+
     now = datetime.now(UTC)
     post_filter = {"_id": post_id}
 
@@ -220,6 +223,8 @@ def update_post(
 
     if result.matched_count < 1:
         raise DbPostNotFoundError
+
+    return result.modified_count > 0
 
 
 def delete_post(post_id: ObjectId, author_id: ObjectId | None = None) -> None:

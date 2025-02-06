@@ -90,14 +90,6 @@ SelfIdStr = Annotated[
 """Stringified ObjectId with alias for `_id`, also deserializes string into ObjectId."""
 
 
-class EmptyPatchError(ValueError):
-    """The requested modification is empty."""
-
-    def __init__(self) -> None:
-        """Represent an empty modification."""
-        super().__init__("Patch is empty")
-
-
 def model_convert[T: BaseModel](target: type[T], value: BaseModel) -> T:
     """Convert a Pydantic model instance into another Pydantic model.
 

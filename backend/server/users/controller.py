@@ -134,7 +134,7 @@ def update_user(
     name: str | None = None,
     email: str | None = None,
     credential: bytes | None = None,
-) -> None:
+) -> bool:
     """Update user.
 
     Do not use the `credential` parameter directly.
@@ -163,6 +163,9 @@ def update_user(
     if credential is not None:
         patch["credential"] = credential
 
+    if not patch:
+        return False
+
     try:
         result = db.users.update_one(
             {
@@ -179,6 +182,8 @@ def update_user(
 
     if result.matched_count < 1:
         raise DbUserNotFoundError
+
+    return result.modified_count > 0
 
 
 def delete_user(user_id: ObjectId) -> None:
