@@ -1,6 +1,7 @@
 """Controller of Comments."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 from bson.objectid import ObjectId
 
@@ -115,7 +116,7 @@ def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbCo
     author = get_user_by_id(author_id)
     validate_post_id(post_id)
 
-    comment = {
+    comment: dict[str, Any] = {
         "content": content,
         "author": author_id,
         "post": post_id,
@@ -125,7 +126,7 @@ def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbCo
 
     result = db.comments.insert_one(comment)
 
-    comment["author"] = author
+    comment["author"] = author.model_dump()
     comment["_id"] = result.inserted_id
 
     return DbComment.model_validate(comment)

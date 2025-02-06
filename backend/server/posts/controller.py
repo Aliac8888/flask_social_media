@@ -1,6 +1,7 @@
 """Controller for posts."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 from bson.objectid import ObjectId
 
@@ -169,7 +170,7 @@ def create_post(
     now = datetime.now(UTC)
     user = get_user_by_id(author_id)
 
-    post = {
+    post: dict[str, Any] = {
         "content": content,
         "creation_time": now,
         "modification_time": now,
@@ -179,7 +180,7 @@ def create_post(
     result = db.posts.insert_one(post)
 
     post["_id"] = result.inserted_id
-    post["author"] = user
+    post["author"] = user.model_dump()
 
     return DbPost.model_validate(post)
 

@@ -36,6 +36,16 @@ ignore = [
 [tool.ruff.format]
 docstring-code-format = true
 
+[tool.pyright]
+include = ["server", "tasks"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+deprecateTypingAliases = true
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+reportUnknownVariableType = "none"
+reportUntypedFunctionDecorator = "none"
+
 [dependency-groups]
 dev = [
     "ruff>=0.9.3",
