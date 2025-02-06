@@ -52,7 +52,7 @@ def to_oid(value: str | ObjectId) -> ObjectId:
     """
     try:
         return ObjectId(value)
-    except InvalidId as e:
+    except (InvalidId, TypeError) as e:
         raise InvalidObjectIdError(value) from e
 
 
