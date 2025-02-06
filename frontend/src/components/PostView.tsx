@@ -1,10 +1,5 @@
 import {useState} from 'preact/hooks';
-import {
-	postPostIdDelete,
-	postPostIdPatch,
-	type Post,
-	type User,
-} from '../api/index.js';
+import {deletePost, updatePost, type Post, type User} from '../api/index.js';
 import {useUser} from '../user.js';
 import {UserView} from './UserView.js';
 import styles from './PostView.module.css';
@@ -53,7 +48,7 @@ export function PostView({
 					<div>
 						<button
 							onClick={async () => {
-								await postPostIdPatch({
+								await updatePost({
 									// eslint-disable-next-line @typescript-eslint/naming-convention
 									path: {post_id: post.id},
 									body: {content: post.content},
@@ -77,7 +72,7 @@ export function PostView({
 						</button>
 						<button
 							onClick={async () => {
-								await postPostIdDelete({
+								await deletePost({
 									// eslint-disable-next-line @typescript-eslint/naming-convention
 									path: {post_id: post.id},
 								});

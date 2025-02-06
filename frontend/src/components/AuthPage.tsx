@@ -1,6 +1,6 @@
 import {useState} from 'preact/hooks';
 import {useUser} from '../user.js';
-import type {AuthResponse} from '../api/types.gen.js';
+import type {AuthnResponse} from '../api/types.gen.js';
 import {LoginForm} from './LoginForm.js';
 import {SignupForm} from './SignupForm.js';
 import './AuthPage.css';
@@ -10,7 +10,7 @@ export function AuthPage({
 	onAuthenticated,
 }: {
 	initialAction?: 'login' | 'signup';
-	onAuthenticated?: (action: 'login' | 'signup', auth: AuthResponse) => void;
+	onAuthenticated?: (action: 'login' | 'signup', auth: AuthnResponse) => void;
 }) {
 	const [action, setAction] = useState<'login' | 'signup' | undefined>(
 		initialAction,

@@ -1,9 +1,9 @@
-import {useEffect, useState} from 'preact/hooks';
+import {useState} from 'preact/hooks';
+import {getUserFollowers, getUserFollowings} from '../api/sdk.gen.js';
 import type {User} from '../api/types.gen.js';
-import {userGet, userUserIdFollowingsGet} from '../api/sdk.gen.js';
 import {useAsyncEffect} from '../async-effect.js';
-import {UserView} from './UserView.js';
 import './FollowingsView.css';
+import {UserView} from './UserView.js';
 
 export function FollowingsView({
 	user,
@@ -20,14 +20,14 @@ export function FollowingsView({
 		let data;
 
 		if (reversed) {
-			({data} = await userGet({
-				query: {
+			({data} = await getUserFollowers({
+				path: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
-					following_id: user.id,
+					user_id: user.id,
 				},
 			}));
 		} else {
-			({data} = await userUserIdFollowingsGet({
+			({data} = await getUserFollowings({
 				path: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					user_id: user.id,
@@ -36,7 +36,7 @@ export function FollowingsView({
 		}
 
 		if (data) {
-			setUsers(data.users);
+			setUsers(data);
 		}
 	}, [user.id, reversed]);
 

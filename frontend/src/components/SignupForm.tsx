@@ -1,12 +1,12 @@
-import {userPost} from '../api/sdk.gen.js';
-import type {AuthResponse} from '../api/types.gen.js';
+import {signup} from '../api/sdk.gen.js';
+import type {AuthnResponse} from '../api/types.gen.js';
 import {FormInput} from './FormInput.js';
 import './SignupForm.css';
 
 export const SignupForm = ({
 	onSignedUp,
 }: {
-	onSignedUp?: (auth: AuthResponse) => void;
+	onSignedUp?: (auth: AuthnResponse) => void;
 }) => {
 	return (
 		<form
@@ -15,7 +15,7 @@ export const SignupForm = ({
 				event.preventDefault();
 				const formData = new FormData(event.currentTarget, event.submitter);
 
-				const {data} = await userPost({
+				const {data} = await signup({
 					body: {
 						name: String(formData.get('username')),
 						email: String(formData.get('email')),

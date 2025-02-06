@@ -1,7 +1,7 @@
 import {useState} from 'preact/hooks';
 import {
-	commentCommentIdDelete,
-	commentCommentIdPatch,
+	deleteComment,
+	updateComment,
 	type Comment,
 	type User,
 } from '../api/index.js';
@@ -46,7 +46,7 @@ export function CommentView({
 					<div>
 						<button
 							onClick={async () => {
-								await commentCommentIdPatch({
+								await updateComment({
 									// eslint-disable-next-line @typescript-eslint/naming-convention
 									path: {comment_id: comment.id},
 									body: {content: comment.content},
@@ -70,7 +70,7 @@ export function CommentView({
 						</button>
 						<button
 							onClick={async () => {
-								await commentCommentIdDelete({
+								await deleteComment({
 									// eslint-disable-next-line @typescript-eslint/naming-convention
 									path: {comment_id: comment.id},
 								});

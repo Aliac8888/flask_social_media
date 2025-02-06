@@ -1,12 +1,12 @@
-import {userLoginPost} from '../api/sdk.gen.js';
-import type {AuthResponse} from '../api/types.gen.js';
+import {login} from '../api/sdk.gen.js';
+import type {AuthnResponse} from '../api/types.gen.js';
 import {FormInput} from './FormInput.js';
 import './LoginForm.css';
 
 export function LoginForm({
 	onLoggedIn,
 }: {
-	onLoggedIn?: (auth: AuthResponse) => void;
+	onLoggedIn?: (auth: AuthnResponse) => void;
 }) {
 	return (
 		<form
@@ -15,7 +15,7 @@ export function LoginForm({
 				event.preventDefault();
 				const formData = new FormData(event.currentTarget, event.submitter);
 
-				const {data} = await userLoginPost({
+				const {data} = await login({
 					body: {
 						email: String(formData.get('email')),
 						password: String(formData.get('password')),

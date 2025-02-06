@@ -1,10 +1,10 @@
 import {useEffect, useState} from 'preact/hooks';
 import {PostView} from './components/PostView.js';
 import {
-	postFeedGet,
-	postGet,
-	postPost,
-	postPostIdPatch,
+	createPost,
+	getAllPosts,
+	getPostFeed,
+	updatePost,
 	type Post,
 } from './api/index.js';
 import {useAsyncEffect} from './async-effect.js';
@@ -24,31 +24,33 @@ export function App() {
 	useAsyncEffect(async () => {
 		const {data} =
 			auth && local
-				? await postFeedGet({query: {user_id: auth.user.id}})
-				: await postGet();
+				? // eslint-disable-next-line @typescript-eslint/naming-convention
+					await getPostFeed({path: {user_id: auth.user.id}})
+				: await getAllPosts();
 
-		setPosts(data?.posts ?? []);
+		setPosts(data ?? []);
 	}, [auth?.user.id, local]);
 
 	// Handle new post creation
 	async function handleCreatePost() {
 		if (!newPostBody || !auth) return;
 
-		await postPost({
+		await createPost({
 			body: {author: auth.user.id, content: newPostBody},
 		});
 		setNewPostBody('');
 
 		const {data} =
 			auth && local
-				? await postFeedGet({query: {user_id: auth.user.id}})
-				: await postGet();
-		setPosts(data?.posts ?? []);
+				? // eslint-disable-next-line @typescript-eslint/naming-convention
+					await getPostFeed({path: {user_id: auth.user.id}})
+				: await getAllPosts();
+		setPosts(data ?? []);
 	}
 
 	// Handle special update (toggle star for a post)
 	async function handleUpdatePost(postId: string) {
-		await postPostIdPatch({
+		await updatePost({
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			path: {post_id: postId},
 			body: {content: newPostBody},
@@ -56,9 +58,10 @@ export function App() {
 
 		const {data} =
 			auth && local
-				? await postFeedGet({query: {user_id: auth.user.id}})
-				: await postGet();
-		setPosts(data?.posts ?? []);
+				? // eslint-disable-next-line @typescript-eslint/naming-convention
+					await getPostFeed({path: {user_id: auth.user.id}})
+				: await getAllPosts();
+		setPosts(data ?? []);
 	}
 
 	return (
@@ -101,9 +104,10 @@ export function App() {
 								onUpdate={async () => {
 									const {data} =
 										auth && local
-											? await postFeedGet({query: {user_id: auth.user.id}})
-											: await postGet();
-									setPosts(data?.posts ?? []);
+											? // eslint-disable-next-line @typescript-eslint/naming-convention
+												await getPostFeed({path: {user_id: auth.user.id}})
+											: await getAllPosts();
+									setPosts(data ?? []);
 								}}
 							/>
 						</div>

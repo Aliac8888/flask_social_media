@@ -1,10 +1,10 @@
 import {createContext, type ComponentChildren} from 'preact';
 import {useContext, useEffect, useState} from 'preact/hooks';
-import {client, type AuthResponse} from './api/index.js';
+import {client, type AuthnResponse} from './api/index.js';
 
-const userContext = createContext<{auth: AuthResponse | undefined} | undefined>(
-	undefined,
-);
+const userContext = createContext<
+	{auth: AuthnResponse | undefined} | undefined
+>(undefined);
 
 export function useUser() {
 	const auth = useContext(userContext);
@@ -17,7 +17,7 @@ export function useUser() {
 }
 
 export function UserProvider({children}: {children: ComponentChildren}) {
-	const [auth, setAuth] = useState<AuthResponse | undefined>(undefined);
+	const [auth, setAuth] = useState<AuthnResponse | undefined>(undefined);
 
 	useEffect(() => {
 		const callback: Parameters<

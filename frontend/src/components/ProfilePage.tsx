@@ -1,10 +1,5 @@
 import {useEffect, useState} from 'preact/hooks';
-import {
-	userGet,
-	userUserIdFollowingsGet,
-	userUserIdGet,
-	type User,
-} from '../api/index.js';
+import {getUserById, type User} from '../api/index.js';
 import {useAsyncEffect} from '../async-effect.js';
 import {UserView} from './UserView.js';
 import {FollowingsView} from './FollowingsView.js';
@@ -23,7 +18,7 @@ export function ProfilePage({userId}: {userId: string | User}) {
 
 		setUser(undefined);
 
-		const {data} = await userUserIdGet({
+		const {data} = await getUserById({
 			path: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				user_id: userId,

@@ -1,7 +1,7 @@
 import {useState} from 'preact/hooks';
 import {
-	commentGet,
-	commentPost,
+	createComment,
+	getCommentsOfPost,
 	type Comment,
 	type Post,
 } from '../api/index.js';
@@ -26,10 +26,11 @@ export function PostPage({
 
 		setComments([]);
 
-		const {data} = await commentGet({query: {post_id: post.id}});
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const {data} = await getCommentsOfPost({path: {post_id: post.id}});
 
 		if (data) {
-			setComments(data.comments);
+			setComments(data);
 		}
 	}, [showComments]);
 
@@ -56,7 +57,7 @@ export function PostPage({
 								event.submitter,
 							);
 
-							await commentPost({
+							await createComment({
 								body: {
 									author: auth.user.id,
 									post: post.id,
@@ -64,10 +65,13 @@ export function PostPage({
 								},
 							});
 
-							const {data} = await commentGet({query: {post_id: post.id}});
+							const {data} = await getCommentsOfPost({
+								// eslint-disable-next-line @typescript-eslint/naming-convention
+								path: {post_id: post.id},
+							});
 
 							if (data) {
-								setComments(data.comments);
+								setComments(data);
 							}
 						}}
 					>
@@ -80,10 +84,13 @@ export function PostPage({
 					<CommentView
 						comment={i}
 						onUpdate={async () => {
-							const {data} = await commentGet({query: {post_id: post.id}});
+							const {data} = await getCommentsOfPost({
+								// eslint-disable-next-line @typescript-eslint/naming-convention
+								path: {post_id: post.id},
+							});
 
 							if (data) {
-								setComments(data.comments);
+								setComments(data);
 							}
 						}}
 					/>

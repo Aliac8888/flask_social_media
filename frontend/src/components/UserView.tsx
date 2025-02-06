@@ -1,9 +1,9 @@
 import {useState} from 'preact/hooks';
 import {
-	userFollowerIdFollowingsFollowingIdDelete,
-	userFollowerIdFollowingsFollowingIdPut,
-	userUserIdDelete,
-	userUserIdPatch,
+	deleteUser,
+	followUser,
+	unfollowUser,
+	updateUser,
 	type User,
 } from '../api/index.js';
 import {useUser} from '../user.js';
@@ -56,7 +56,7 @@ export function UserView({
 					<div>
 						<button
 							onClick={async () => {
-								await userUserIdPatch({
+								await updateUser({
 									// eslint-disable-next-line @typescript-eslint/naming-convention
 									path: {user_id: user.id},
 									body: {
@@ -88,7 +88,7 @@ export function UserView({
 						</button>
 						<button
 							onClick={async () => {
-								await userUserIdDelete({
+								await deleteUser({
 									path: {
 										// eslint-disable-next-line @typescript-eslint/naming-convention
 										user_id: user.id,
@@ -107,9 +107,11 @@ export function UserView({
 					<div>
 						<button
 							onClick={async () => {
-								await userFollowerIdFollowingsFollowingIdPut({
+								await followUser({
 									path: {
+										// eslint-disable-next-line @typescript-eslint/naming-convention
 										follower_id: context.auth!.user.id,
+										// eslint-disable-next-line @typescript-eslint/naming-convention
 										following_id: user.id,
 									},
 								});
@@ -119,9 +121,11 @@ export function UserView({
 						</button>
 						<button
 							onClick={async () => {
-								await userFollowerIdFollowingsFollowingIdDelete({
+								await unfollowUser({
 									path: {
+										// eslint-disable-next-line @typescript-eslint/naming-convention
 										follower_id: context.auth!.user.id,
+										// eslint-disable-next-line @typescript-eslint/naming-convention
 										following_id: user.id,
 									},
 								});
