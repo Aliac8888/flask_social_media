@@ -16,6 +16,7 @@ from server.auth.view_model import (
 from server.config import admin_email, maintenance
 from server.model_utils import model_convert
 from server.plugins import current_user
+from server.users.controller import get_user_by_id
 from server.users.controller_model import DbUserExistsError, DbUserNotFoundError
 from server.users.view_model import User, UserExists, UserId, UserInit, UserNotFound
 
@@ -81,6 +82,31 @@ def handle_login(body: AuthnRequest):  # noqa: ANN201
         user=user,
         jwt=create_access_token(user),
     ).model_dump()
+
+
+@bp.get(
+    "/me",
+    operation_id="getCurrentUser",
+    tags=[_auth_tag],
+    security=[{}, {"jwt": []}],
+    responses={
+        200: User,
+        401: AuthnFailed,
+        404: UserNotFound,
+    },
+)
+@jwt_required(optional=True)
+def handle_get_current_user():  # noqa: ANN201
+    """Get current user."""
+    if not current_user:
+        return UserNotFound().model_dump(), 404
+
+    try:
+        user = get_user_by_id(current_user.user_id)
+    except DbUserNotFoundError:
+        return UserNotFound().model_dump(), 404
+
+    return model_convert(User, user).model_dump()
 
 
 @bp.put(
