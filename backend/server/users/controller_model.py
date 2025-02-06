@@ -1,9 +1,13 @@
+"""Controller Models for Users."""
+
 from pydantic import BaseModel, EmailStr, RootModel
 
 from server.model_utils import ObjectIdRaw, SelfIdRaw
 
 
 class DbUser(BaseModel):
+    """User database schema."""
+
     id: SelfIdRaw
     name: str
     email: EmailStr
@@ -12,11 +16,12 @@ class DbUser(BaseModel):
 
 
 class DbUserNotFoundError(Exception):
-    pass
+    """User was not found in the database."""
 
 
 class DbUserExistsError(Exception):
-    pass
+    """User was already in the database."""
 
 
 DbUserList = RootModel[list[DbUser]]
+"""List of database users."""

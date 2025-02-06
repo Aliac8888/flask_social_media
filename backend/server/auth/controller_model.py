@@ -1,2 +1,5 @@
+"""Controller models of Authentication/Authorization."""
+
+
 class AuthnFailedError(Exception):
-    pass
+    """Authentication failed."""

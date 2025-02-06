@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Run a flask development server."""
+
 import __init__  # noqa: F401
 
 from server.app import create_app

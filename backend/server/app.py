@@ -1,3 +1,5 @@
+"""Create a WSGI flask app to serve requests."""
+
 from flask_openapi3.models.info import Info
 from flask_openapi3.models.license import License
 from flask_openapi3.openapi import OpenAPI
@@ -8,6 +10,12 @@ from server.root.view import bp
 
 
 def create_app() -> OpenAPI:
+    """Create a flask app.
+
+    Returns:
+        OpenAPI: The flask app.
+
+    """
     info = Info(
         title="Chamran Social",
         license=License(

@@ -1,3 +1,5 @@
+"""Controller of Comments."""
+
 from datetime import UTC, datetime
 
 from bson.objectid import ObjectId
@@ -11,6 +13,18 @@ from server.db import db, get_one
 
 
 def get_comment_by_id(comment_id: ObjectId) -> DbComment:
+    """Get comment by Id.
+
+    Args:
+        comment_id (ObjectId): Id of comment.
+
+    Raises:
+        DbCommentNotFoundError: No comment by the given Id was found.
+
+    Returns:
+        DbComment: Found Comment.
+
+    """
     result = get_one(
         db.comments.aggregate(
             [
@@ -35,6 +49,15 @@ def get_comment_by_id(comment_id: ObjectId) -> DbComment:
 
 
 def validate_comment_id(comment_id: ObjectId) -> None:
+    """Check if a comment id exists without retrieving its data.
+
+    Args:
+        comment_id (ObjectId): Id of comment.
+
+    Raises:
+        DbCommentNotFoundError: No comment with the given id exists.
+
+    """
     result = db.comments.find_one({"_id": comment_id}, {"_id": 1})
 
     if result is None:
@@ -42,6 +65,15 @@ def validate_comment_id(comment_id: ObjectId) -> None:
 
 
 def get_comments_of_post(post_id: ObjectId) -> DbCommentList:
+    """Get comments of post.
+
+    Args:
+        post_id (ObjectId): Id of post.
+
+    Returns:
+        DbCommentList: Comments of post.
+
+    """
     result = db.comments.aggregate(
         [
             {"$match": {"post": post_id}},
@@ -61,6 +93,21 @@ def get_comments_of_post(post_id: ObjectId) -> DbCommentList:
 
 
 def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbComment:
+    """Create a comment.
+
+    Args:
+        content (str): Content of comment.
+        author_id (ObjectId): Id of authoring user.
+        post_id (ObjectId): Id of post.
+
+    Raises:
+        DbPostNotFoundError: No post with the given ID exists.
+        DbUserNotFoundError: User with the given ID was not in the database.
+
+    Returns:
+        DbComment: Created Comment.
+
+    """
     from server.posts.controller import validate_post_id
     from server.users.controller import get_user_by_id
 
@@ -87,6 +134,18 @@ def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbCo
 def update_comment(
     comment_id: ObjectId, content: str, author_id: ObjectId | None = None
 ) -> None:
+    """Update a comment.
+
+    Args:
+        comment_id (ObjectId): Id of comment.
+        content (str): New content
+        author_id (ObjectId, optional): Expected comment author. Defaults to None,
+            which allows any author.
+
+    Raises:
+        DbPostNotFoundError: No comment with the given ID and author was found.
+
+    """
     now = datetime.now(UTC)
     comment_filter = {"_id": comment_id}
 
@@ -108,6 +167,17 @@ def update_comment(
 
 
 def delete_comment(comment_id: ObjectId, author_id: ObjectId | None = None) -> None:
+    """Delete a comment.
+
+    Args:
+        comment_id (ObjectId): Id of comment.
+        author_id (ObjectId, optional): Expected comment author. Defaults to None,
+            which allows any author.
+
+    Raises:
+        DbPostNotFoundError: No comment with the given ID and author was found.
+
+    """
     comment_filter = {"_id": comment_id}
 
     if author_id is not None:
@@ -120,18 +190,45 @@ def delete_comment(comment_id: ObjectId, author_id: ObjectId | None = None) -> N
 
 
 def delete_comments_by_author(author_id: ObjectId) -> bool:
+    """Delete all comments by author.
+
+    Args:
+        author_id (ObjectId): Id of authoring user.
+
+    Returns:
+        bool: was anything deleted?
+
+    """
     result = db.comments.delete_many({"author": author_id})
 
     return result.deleted_count > 0
 
 
 def delete_comments_of_post(post_id: ObjectId) -> bool:
+    """Delete all comments by post.
+
+    Args:
+        post_id (ObjectId): Id of post.
+
+    Returns:
+        bool: was anything deleted?
+
+    """
     result = db.comments.delete_many({"post": post_id})
 
     return result.deleted_count > 0
 
 
 def delete_comments_of_many_posts(post_ids: list[ObjectId]) -> bool:
+    """Delete all comments by many posts.
+
+    Args:
+        post_ids (list[ObjectId]): Id of posts.
+
+    Returns:
+        bool: was anything deleted?
+
+    """
     if not post_ids:
         return False
 

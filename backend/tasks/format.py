@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Run Ruff formatter on the source code."""
+
 from os import execv
 from sys import argv
 

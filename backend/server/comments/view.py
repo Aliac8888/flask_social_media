@@ -1,3 +1,5 @@
+"""Comments API."""
+
 from flask_jwt_extended import jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -27,18 +29,20 @@ from server.posts.view_model import PostId, PostNotFound
 from server.users.controller_model import DbUserNotFoundError
 from server.users.view_model import UserNotFound
 
-comments_tag = Tag(name="comments")
+_comments_tag = Tag(name="comments")
 bp = APIBlueprint("comment", __name__, url_prefix="/comments")
+"""Comments route blueprint."""
 
 
 @bp.get(
-    "/",
+    "/of/<post_id>",
     operation_id="getCommentsOfPost",
-    tags=[comments_tag],
+    tags=[_comments_tag],
     responses={200: CommentsList},
 )
-def handle_get_comments_of_post(query: PostId):  # noqa: ANN201
-    comments = get_comments_of_post(query.post_id)
+def handle_get_comments_of_post(path: PostId):  # noqa: ANN201
+    """Get comments of post."""
+    comments = get_comments_of_post(path.post_id)
 
     return model_convert(CommentsList, comments).model_dump()
 
@@ -46,7 +50,7 @@ def handle_get_comments_of_post(query: PostId):  # noqa: ANN201
 @bp.post(
     "/",
     operation_id="createComment",
-    tags=[comments_tag],
+    tags=[_comments_tag],
     security=[{"jwt": []}],
     responses={
         201: CommentId,
@@ -57,6 +61,7 @@ def handle_get_comments_of_post(query: PostId):  # noqa: ANN201
 )
 @jwt_required()
 def handle_create_comment(body: CommentInit):  # noqa: ANN201
+    """Create a comment."""
     if current_user.user_id != body.author and not current_user.admin:
         return AuthzFailed().model_dump(), 403
 
@@ -77,10 +82,11 @@ def handle_create_comment(body: CommentInit):  # noqa: ANN201
 @bp.get(
     "/<comment_id>",
     operation_id="getCommentById",
-    tags=[comments_tag],
+    tags=[_comments_tag],
     responses={200: Comment, 404: CommentNotFound},
 )
 def handle_get_comment_by_id(path: CommentId):  # noqa: ANN201
+    """Get a comment by ID."""
     try:
         comment = get_comment_by_id(path.comment_id)
     except DbCommentNotFoundError:
@@ -92,12 +98,13 @@ def handle_get_comment_by_id(path: CommentId):  # noqa: ANN201
 @bp.patch(
     "/<comment_id>",
     operation_id="updateComment",
-    tags=[comments_tag],
+    tags=[_comments_tag],
     security=[{"jwt": []}],
     responses={204: None, 401: AuthnFailed, 404: CommentNotFound},
 )
 @jwt_required()
 def handle_update_comment(path: CommentId, body: CommentPatch):  # noqa: ANN201
+    """Update comment."""
     try:
         update_comment(
             path.comment_id,
@@ -113,12 +120,13 @@ def handle_update_comment(path: CommentId, body: CommentPatch):  # noqa: ANN201
 @bp.delete(
     "/<comment_id>",
     operation_id="deleteComment",
-    tags=[comments_tag],
+    tags=[_comments_tag],
     security=[{"jwt": []}],
     responses={204: None, 401: AuthnFailed, 404: CommentNotFound},
 )
 @jwt_required()
 def handle_delete_comment(path: CommentId):  # noqa: ANN201
+    """Delete comment."""
     try:
         delete_comment(
             path.comment_id,

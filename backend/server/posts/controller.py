@@ -1,3 +1,5 @@
+"""Controller for posts."""
+
 from datetime import UTC, datetime
 
 from bson.objectid import ObjectId
@@ -7,6 +9,12 @@ from server.posts.controller_model import DbPost, DbPostList, DbPostNotFoundErro
 
 
 def get_all_posts() -> DbPostList:
+    """Get all posts.
+
+    Returns:
+        DbPostList: Posts.
+
+    """
     result = db.posts.aggregate(
         [
             {
@@ -25,6 +33,18 @@ def get_all_posts() -> DbPostList:
 
 
 def get_post_by_id(post_id: ObjectId) -> DbPost:
+    """Get post by ID.
+
+    Args:
+        post_id (ObjectId): ID of post.
+
+    Raises:
+        DbPostNotFoundError: No post with given ID exists.
+
+    Returns:
+        DbPost: The post.
+
+    """
     result = get_one(
         db.posts.aggregate(
             [
@@ -49,6 +69,15 @@ def get_post_by_id(post_id: ObjectId) -> DbPost:
 
 
 def validate_post_id(post_id: ObjectId) -> None:
+    """Check if a post with the given ID exists without fetching its data.
+
+    Args:
+        post_id (ObjectId): Id of post.
+
+    Raises:
+        DbPostNotFoundError: No post with the given ID exists.
+
+    """
     result = db.posts.find_one({"_id": post_id}, {"_id": 1})
 
     if result is None:
@@ -56,6 +85,15 @@ def validate_post_id(post_id: ObjectId) -> None:
 
 
 def get_posts_by_author(author_id: ObjectId) -> DbPostList:
+    """Get posts by an author.
+
+    Args:
+        author_id (ObjectId): Id of authoring user.
+
+    Returns:
+        DbPostList: Posts by the author.
+
+    """
     result = db.posts.aggregate(
         [
             {"$match": {"author": author_id}},
@@ -75,6 +113,18 @@ def get_posts_by_author(author_id: ObjectId) -> DbPostList:
 
 
 def get_post_feed(user_id: ObjectId) -> DbPostList:
+    """Get post feed of user.
+
+    Args:
+        user_id (ObjectId): Id of user.
+
+    Raises:
+        DbUserNotFoundError: User with the given ID was not in the database.
+
+    Returns:
+        DbPostList: Posts in user's feed.
+
+    """
     from server.users.controller import get_user_by_id
 
     user = get_user_by_id(user_id)
@@ -101,6 +151,19 @@ def create_post(
     content: str,
     author_id: ObjectId,
 ) -> DbPost:
+    """Create a post.
+
+    Args:
+        content (str): Post content.
+        author_id (ObjectId): Author of the post.
+
+    Raises:
+        DbUserNotFoundError: User with the given ID was not in the database.
+
+    Returns:
+        DbPost: Created post.
+
+    """
     from server.users.controller import get_user_by_id
 
     now = datetime.now(UTC)
@@ -126,6 +189,18 @@ def update_post(
     content: str,
     author_id: ObjectId | None = None,
 ) -> None:
+    """Update post.
+
+    Args:
+        post_id (ObjectId): Id of post.
+        content (str): New content.
+        author_id (ObjectId, optional): Expected post author. Defaults to None,
+            which allows any author.
+
+    Raises:
+        DbPostNotFoundError: No post with the given ID and author was found.
+
+    """
     now = datetime.now(UTC)
     post_filter = {"_id": post_id}
 
@@ -147,6 +222,17 @@ def update_post(
 
 
 def delete_post(post_id: ObjectId, author_id: ObjectId | None = None) -> None:
+    """Delete post.
+
+    Args:
+        post_id (ObjectId): Id of post.
+        author_id (ObjectId, optional): Expected post author. Defaults to None,
+            which allows any author.
+
+    Raises:
+        DbPostNotFoundError: No post with the given ID and author was found.
+
+    """
     from server.comments.controller import delete_comments_of_post
 
     post_filter = {"_id": post_id}
@@ -163,6 +249,15 @@ def delete_post(post_id: ObjectId, author_id: ObjectId | None = None) -> None:
 
 
 def delete_posts_by_author(author_id: ObjectId) -> bool:
+    """Delete all posts by author.
+
+    Args:
+        author_id (ObjectId): ID of authoring user.
+
+    Returns:
+        bool: was anything deleted?
+
+    """
     from server.comments.controller import delete_comments_of_many_posts
 
     posts = db.posts.find({"author": author_id}, {"_id": 1}).to_list()

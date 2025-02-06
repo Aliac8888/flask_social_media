@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+"""Run Pyright type checker on the source code."""
+
 from os import execvp
 from pathlib import Path
 from sys import argv
 
-import __init__  # noqa: F401
+from __init__ import root
 
 execvp(
     "pnpm",  # noqa: S607
@@ -15,9 +17,9 @@ execvp(
         ".venv",
         "-p",
         ".",
-        *Path().glob("*.py"),
-        *Path("server").glob("**/*.py"),
-        *Path("tasks").glob("**/*.py"),
+        *Path(root).glob("*.py"),
+        *Path(root).glob("server/**/*.py"),
+        *Path(root).glob("tasks/**/*.py"),
         *argv,
     ],
 )

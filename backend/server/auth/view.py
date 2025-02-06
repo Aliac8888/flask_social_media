@@ -1,3 +1,5 @@
+"""Authentication/Authorization API."""
+
 from flask_jwt_extended import create_access_token, jwt_required
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -17,14 +19,15 @@ from server.plugins import current_user
 from server.users.controller_model import DbUserExistsError, DbUserNotFoundError
 from server.users.view_model import User, UserExists, UserId, UserInit, UserNotFound
 
-auth_tag = Tag(name="authentication")
+_auth_tag = Tag(name="auth")
 bp = APIBlueprint("auth", __name__, url_prefix="/users")
+"""Authentication/Authorization route blueprint."""
 
 
 @bp.post(
     "/signup",
     operation_id="signup",
-    tags=[auth_tag],
+    tags=[_auth_tag],
     responses={
         201: AuthnResponse,
         403: AuthzFailed,
@@ -32,6 +35,7 @@ bp = APIBlueprint("auth", __name__, url_prefix="/users")
     },
 )
 def handle_signup(body: UserInit):  # noqa: ANN201
+    """Signup."""
     if body.email == admin_email and not maintenance:
         return UserExists().model_dump(), 409
 
@@ -58,10 +62,11 @@ def handle_signup(body: UserInit):  # noqa: ANN201
 @bp.post(
     "/login",
     operation_id="login",
-    tags=[auth_tag],
+    tags=[_auth_tag],
     responses={200: AuthnResponse, 403: AuthzFailed},
 )
 def handle_login(body: AuthnRequest):  # noqa: ANN201
+    """Login."""
     if not body.password and not maintenance:
         return AuthzFailed().model_dump(), 403
 
@@ -81,7 +86,7 @@ def handle_login(body: AuthnRequest):  # noqa: ANN201
 @bp.put(
     "/<user_id>/password",
     operation_id="changePassword",
-    tags=[auth_tag],
+    tags=[_auth_tag],
     security=[{"jwt": []}],
     responses={
         204: None,
@@ -92,6 +97,7 @@ def handle_login(body: AuthnRequest):  # noqa: ANN201
 )
 @jwt_required()
 def handle_change_password(path: UserId, body: UserPassword):  # noqa: ANN201
+    """Change user password."""
     if current_user.admin and current_user.user_id == path.user_id:
         return AuthzFailed().model_dump(), 403
 

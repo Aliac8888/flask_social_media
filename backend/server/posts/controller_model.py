@@ -1,3 +1,5 @@
+"""Controller models for Posts."""
+
 from datetime import datetime
 
 from pydantic import BaseModel, RootModel
@@ -7,6 +9,8 @@ from server.users.controller_model import DbUser
 
 
 class DbPost(BaseModel):
+    """Post database schema."""
+
     id: SelfIdRaw
     content: str
     creation_time: datetime
@@ -15,7 +19,8 @@ class DbPost(BaseModel):
 
 
 class DbPostNotFoundError(Exception):
-    pass
+    """Post does not exist in the database."""
 
 
 DbPostList = RootModel[list[DbPost]]
+"""List of database posts."""

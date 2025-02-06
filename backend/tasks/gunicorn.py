@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Run a server via Gunicorn."""
+
 from os import execv
 from sys import argv
 

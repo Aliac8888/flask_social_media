@@ -1,3 +1,5 @@
+"""Controller of Authentication/Authorization."""
+
 from bson.objectid import ObjectId
 
 from server.auth.controller_model import AuthnFailedError
@@ -6,6 +8,20 @@ from server.users.controller_model import DbUser
 
 
 def login(email: str, password: str) -> DbUser:
+    """Validate user password. Used for logging in.
+
+    Args:
+        email (str): Email address of user.
+        password (str): Password of user.
+
+    Raises:
+        DbUserNotFound: No user with the given email address exists.
+        AuthnFailedError: The given password is incorrect.
+
+    Returns:
+        DbUser: Validated user data.
+
+    """
     from server.users.controller import get_user_by_email
 
     user = get_user_by_email(email)
@@ -23,6 +39,16 @@ def change_password(
     user_id: ObjectId,
     password: str,
 ) -> None:
+    """Change a user's password.
+
+    Args:
+        user_id (ObjectId): Id of user.
+        password (str): New password of user.
+
+    Raises:
+        DbUserNotFoundError: No user with the given id exist.
+
+    """
     from server.users.controller import update_user
 
     update_user(
@@ -36,6 +62,20 @@ def signup(
     email: str,
     password: str,
 ) -> DbUser:
+    """Create a new user.
+
+    Args:
+        name (str): Name of user.
+        email (str): Email address of user.
+        password (str): Password of user.
+
+    Raises:
+        DbUserExistsError: User with given email address already exists.
+
+    Returns:
+        DbUser: Created user.
+
+    """
     from server.users.controller import create_user
 
     credential = bcrypt.generate_password_hash(password) if password else b""

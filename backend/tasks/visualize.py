@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Visualize users and their followings in the database."""
+
 from json import dumps
 from sys import stdout
 
