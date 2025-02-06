@@ -10,6 +10,7 @@ from server.comments.controller import (
     create_comment,
     delete_comment,
     get_comment_by_id,
+    get_comments_by_author,
     get_comments_of_post,
     update_comment,
 )
@@ -27,7 +28,7 @@ from server.plugins import current_user
 from server.posts.controller_model import DbPostNotFoundError
 from server.posts.view_model import PostId, PostNotFound
 from server.users.controller_model import DbUserNotFoundError
-from server.users.view_model import UserNotFound
+from server.users.view_model import UserId, UserNotFound
 
 _comments_tag = Tag(name="comments")
 bp = APIBlueprint("comment", __name__, url_prefix="/comments")
@@ -43,6 +44,22 @@ bp = APIBlueprint("comment", __name__, url_prefix="/comments")
 def handle_get_comments_of_post(path: PostId):  # noqa: ANN201
     """Get comments of post."""
     comments = get_comments_of_post(path.post_id)
+
+    return model_convert(CommentsList, comments).model_dump()
+
+
+@bp.get(
+    "/by/<user_id>",
+    operation_id="getCommentsByAuthor",
+    tags=[_comments_tag],
+    responses={200: CommentsList, 404: UserNotFound},
+)
+def handle_get_comments_by_author(path: UserId):  # noqa: ANN201
+    """Get comments by an author."""
+    try:
+        comments = get_comments_by_author(path.user_id)
+    except DbUserNotFoundError:
+        return UserNotFound().model_dump(), 404
 
     return model_convert(CommentsList, comments).model_dump()
 

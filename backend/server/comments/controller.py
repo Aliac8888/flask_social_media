@@ -93,6 +93,30 @@ def get_comments_of_post(post_id: ObjectId) -> DbCommentList:
     return DbCommentList.model_validate(result)
 
 
+def get_comments_by_author(author_id: ObjectId) -> DbCommentList:
+    """Get comments by an author.
+
+    Args:
+        author_id (ObjectId): Id of authoring user.
+
+    Raises:
+        DbUserNotFoundError: User with the given ID was not in the database.
+
+    Returns:
+        DbCommentList: Comments of post.
+
+    """
+    from server.users.controller import get_user_by_id
+    author = get_user_by_id(author_id)
+
+    result = db.comments.find({"author": author_id}).to_list()
+
+    for i in result:
+        i["author"] = author
+
+    return DbCommentList.model_validate(result)
+
+
 def create_comment(content: str, author_id: ObjectId, post_id: ObjectId) -> DbComment:
     """Create a comment.
 
