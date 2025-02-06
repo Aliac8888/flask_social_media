@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, RootModel
 
 from server.model_utils import ObjectIdRaw, SelfIdRaw
+from server.users.controller_model import DbUser
 
 
 class DbComment(BaseModel):
@@ -12,7 +13,7 @@ class DbComment(BaseModel):
 
     id: SelfIdRaw
     content: str
-    author: ObjectIdRaw
+    author: DbUser
     post: ObjectIdRaw
     creation_time: datetime
     modification_time: datetime
